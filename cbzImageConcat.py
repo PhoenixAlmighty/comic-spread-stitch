@@ -65,8 +65,6 @@ def main():
 	
 	print("{} books evaluated. See output above for results.\n".format(len(lines)))
 
-# TODO: unfuck manga mode
-
 def combinePages(imgList, pageList, manga):
 	for page in pageList:
 		# read in the two pages I want to combine
