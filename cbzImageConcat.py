@@ -108,15 +108,6 @@ def combinePages(imgList, pageList):
 		if not page == 0:
 			os.remove(imgList[page])
 
-# Required test cases:
-	# Back cover only
-	# Back cover + 1 spread
-	# Back cover + 2 spreads
-	# Back cover + 3 or more spreads
-	# 1 spread
-	# 2 spreads
-	# 3 or more spreads
-
 def printSuccess(bookFileName, pagesList):
 	pagesString = ""
 	if pagesList[0] == 0 and len(pagesList) == 1:
@@ -142,11 +133,6 @@ def printSuccess(bookFileName, pagesList):
 	
 	print("{} successfully altered on {}.".format(bookFileName, pagesString))
 
-# Required test cases:
-	# No book directory
-	# Book directory that doesn't exist on my computer
-	# Book directory that does exist on my computer
-
 def bookDirisValid(bookDir):
 	if bookDir == "":
 		print("No book directory on this line. Check your input.")
@@ -156,11 +142,6 @@ def bookDirisValid(bookDir):
 		return False
 	
 	return True
-
-# Required test cases:
-	# No pages
-	# Letters in list
-	# Only numbers in list
 
 def convertPageList(pageString, bookDir):
 	if pageString == "":
@@ -179,11 +160,6 @@ def convertPageList(pageString, bookDir):
 	pageIntList.sort()
 	
 	return pageIntList
-
-# Required test cases:
-	# Directory has no CBZ file
-	# Directory has a CBZ_OLD file
-	# Directory has a CBZ file and no CBZ_OLD file
 
 def findCBZFile():
 	bookFiles = os.listdir()
