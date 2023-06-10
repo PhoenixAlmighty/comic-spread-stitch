@@ -3,8 +3,6 @@ from zipfile import ZipFile
 import os
 import shutil
 
-calLibDir = "D:\\Calibre Library\\"
-bookDir = os.path.join(calLibDir, "Erik Larsen\\Savage Dragon #203 (1404)\\")
 tempPath = "temp"
 
 def main():
