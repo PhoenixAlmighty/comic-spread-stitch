@@ -26,32 +26,13 @@ def main():
 		if not pages:
 			continue
 		
-		# pages = list(map(int, parts[1].split(",")))
-		# pages.sort()
-		
 		os.chdir(bookDir)
 		
-		# find CBZ file from book directory
-		# check for CBZ_OLD file and skip this book if found
 		bookFileName = findCBZFile()
 		if bookFileName == "":
 			print("{} has no CBZ files in it. Check your input.".format(bookDir))
 		if not bookFileName:
 			continue
-		
-		# bookFiles = os.listdir()
-		# for file in bookFiles:
-			# filename, extension = os.path.splitext(file)
-			# if extension == ".cbz":
-				# bookFileName = file
-			# if extension == ".cbz_old":
-				# backupPresent = True
-				# print("{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after moving or deleting the CBZ_OLD file.\n".format(bookDir))
-				# break
-		# if backupPresent:
-			# continue
-		# if bookFileName == "":
-			# print("{} has no CBZ files in it. Check your input.".format(bookDir))
 		
 		with ZipFile(bookFileName, 'r') as zip:
 			zip.extractall(path = tempPath)
@@ -80,10 +61,6 @@ def main():
 		
 		os.rmdir(tempPath)
 		
-		# print success message and pages to check
-		# for a in range(len(pages)):
-			# pages[a] = pages[a] - a
-		# print("{} successfully altered. Check pages {} to make sure it was done right.\n".format(bookFileName, pages))
 		printSuccess(bookFileName, pages)
 	
 	print("{} books evaluated. See output above for results.\n".format(len(lines)))
