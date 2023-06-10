@@ -12,7 +12,7 @@ def main():
 		lines = pagesFile.readlines()
 	
 	for line in lines:
-		backupPresent = False
+		manga = False
 		bookFileName = ""
 		parts = line.split("|")
 		bookDir = parts[0]
@@ -44,7 +44,9 @@ def main():
 			os.rmdir(imgList[0])
 			imgList = os.listdir()
 		
-		combinePages(imgList, pages)
+		if len(parts) > 2 and parts[2].strip() == "manga":
+			manga = True
+		combinePages(imgList, pages, manga)
 		
 		imgList = os.listdir()
 		os.chdir("..")
@@ -63,9 +65,9 @@ def main():
 	
 	print("{} books evaluated. See output above for results.\n".format(len(lines)))
 
-# TODO: implement manga mode
+# TODO: unfuck manga mode
 
-def combinePages(imgList, pageList):
+def combinePages(imgList, pageList, manga):
 	for page in pageList:
 		# read in the two pages I want to combine
 		# this is page - 1 and page because python lists are 0-indexed and the page numbers are 1-indexed
@@ -74,7 +76,10 @@ def combinePages(imgList, pageList):
 		img2 = cv2.imread(imgList[page])
 		
 		# horizontally concatenate the two pages
-		combImg = cv2.hconcat([img1, img2])
+		if manga:
+			combImg = cv2.hconcat([img2, img1])
+		else:
+			combImg = cv2.hconcat([img1, img2])
 		
 		# overwrite the first page with the combined pages
 		cv2.imwrite(imgList[page - 1], combImg)
