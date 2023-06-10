@@ -34,8 +34,9 @@ def main():
 		# find CBZ file from book directory
 		# check for CBZ_OLD file and skip this book if found
 		bookFileName = findCBZFile()
-		if not bookFileName:
+		if bookFileName == "":
 			print("{} has no CBZ files in it. Check your input.".format(bookDir))
+		if not bookFileName:
 			continue
 		
 		# bookFiles = os.listdir()
@@ -169,7 +170,7 @@ def findCBZFile():
 		if extension == ".cbz":
 			bookFileName = file
 		if extension == ".cbz_old":
-			print("{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after moving or deleting the CBZ_OLD file.\n".format(bookDir))
+			print("{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after moving or deleting the CBZ_OLD file.\n".format(os.getcwd))
 			return False
 	
 	return bookFileName
