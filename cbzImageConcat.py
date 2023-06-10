@@ -113,17 +113,17 @@ def printSuccess(bookFileName, pagesList):
 	pagesString = ""
 	if pagesList[0] == 0 and len(pagesList) == 1:
 		pagesString = "the back cover"
-		pagesList.del(0)
+		del pagesList[0]
 	elif pagesList[0] == 0 and len(pagesList) > 1:
 		pagesString = "the back cover and "
-		pagesList.del(0)
+		del pagesList[0]
 	numPages = len(pagesList)
 	if numPages == 1:
 		pagesString += "page {}".format(pagesList[0])
 	elif numPages == 2:
 		pagesString += "pages {} and {}".format(pagesList[0], pagesList[1] - 1)
 	elif numPages > 2:
-		pagesString = "pages "
+		pagesString += "pages "
 		for i in range(numPages):
 			if i == numPages - 1:
 				pagesString += "{}".format(pagesList[i] - i)
@@ -134,7 +134,7 @@ def printSuccess(bookFileName, pagesList):
 	
 	print("{} successfully altered on {}.".format(bookFileName, pagesString))
 
-def bookDirisValid(bookDir):
+def bookDirIsValid(bookDir):
 	if bookDir == "":
 		print("No book directory on this line. Check your input.")
 		return False
@@ -151,7 +151,7 @@ def convertPageList(pageString, bookDir):
 	pageStringList = pageString.split(",")
 	pageIntList = []
 	for page in pageStringList:
-		page.strip()
+		page = page.strip()
 		if not page.isdigit():
 			print("Page list for {} contains at least one thing that's not a number. Check your input.".format(bookDir))
 			return False
@@ -170,7 +170,7 @@ def findCBZFile():
 		if extension == ".cbz":
 			bookFileName = file
 		if extension == ".cbz_old":
-			print("{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after moving or deleting the CBZ_OLD file.\n".format(os.getcwd))
+			print("{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after moving or deleting the CBZ_OLD file.\n".format(os.getcwd()))
 			return False
 	
 	return bookFileName
