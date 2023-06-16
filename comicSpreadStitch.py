@@ -7,6 +7,7 @@ tempPath = "temp"
 
 def main():
 	lines = []
+	stitcher = cv2.Stitcher_create()
 	
 	with open("pagesToCombine.txt", "r") as pagesFile:
 		lines = pagesFile.readlines()
@@ -46,7 +47,7 @@ def main():
 		
 		if len(parts) > 2 and parts[2].strip() == "manga":
 			manga = True
-		combinePages(imgList, pages, manga)
+		stitchPages(stitcher, imgList, pages, manga)
 		
 		imgList = os.listdir()
 		os.chdir("..")
@@ -86,6 +87,44 @@ def combinePages(imgList, pageList, manga):
 		# unless I'm combining the front and back covers, in which case the front cover gets to stay as it is
 		if not page == 0:
 			os.remove(imgList[page])
+
+# Note: the below function did not stitch any images together when applied to Big Girls, Vol. 1; it just concatenated all of them
+
+def stitchPages(stitcher, imgList, pageList, manga):
+	stitchedPages = []
+	concatPages = []
+	for page in pageList:
+		# read in the two pages I want to combine
+		# this is page - 1 and page because python lists are 0-indexed and the page numbers are 1-indexed
+		# print("{}, {}".format(page - 1, page))
+		img1 = cv2.imread(imgList[page - 1])
+		img2 = cv2.imread(imgList[page])
+		
+		#attempt to stitch the images
+		if manga:
+			(status, stitched) = stitcher.stitch([img2, img1])
+		else:
+			(status, stitched) = stitcher.stitch([img2, img1])
+		
+		# horizontally concatenate the two pages if stitching didn't work
+		if status != 0:
+			concatPages.append([page, status])
+			if manga:
+				stitched = cv2.hconcat([img2, img1])
+			else:
+				stitched = cv2.hconcat([img1, img2])
+		else:
+			stitchedPages.append(page)
+		
+		# overwrite the first page with the combined pages
+		cv2.imwrite(imgList[page - 1], stitched)
+		
+		# remove the second page so I don't see it again separately from the combined pages
+		# unless I'm combining the front and back covers, in which case the front cover gets to stay as it is
+		if not page == 0:
+			os.remove(imgList[page])
+	
+	print("Stitched on pages {}, concatenated on pages {}".format(stitchedPages, concatPages))
 
 def printSuccess(bookFileName, pagesList):
 	pagesString = ""
