@@ -12,10 +12,16 @@ def main():
 		lines = pagesFile.readlines()
 	
 	for line in lines:
-		manga = False
+		# manga = False
+		# backedup = False
+		# unknownFlag = False
 		bookFileName = ""
 		parts = line.split("|")
 		bookDir = parts[0]
+		# if len(parts) > 2:
+		manga, backedup, unknownFlag = getBookFlags(parts[2:])
+		if unknownFlag:
+			print("Unknown flag detected for {}. Skipping.".format(bookDir))
 	
 		# check for errors in input
 		if not bookDirIsValid(bookDir):
@@ -44,13 +50,12 @@ def main():
 			os.rmdir(imgList[0])
 			imgList = os.listdir()
 		
-		if len(parts) > 2 and parts[2].strip() == "manga":
-			manga = True
 		processPages(imgList, pages, manga)
 		
 		imgList = os.listdir()
 		os.chdir("..")
-		os.rename(bookFileName, bookFileName + "_old")
+		if not backedup:
+			os.rename(bookFileName, bookFileName + "_old")
 		
 		# create new CBZ file with the combined pages
 		with ZipFile(bookFileName, 'w') as newZip:
@@ -184,18 +189,44 @@ def convertPageList(pageString, bookDir):
 	
 	return pageIntList
 
-def findCBZFile():
+def findCBZFile(backedup):
 	bookFiles = os.listdir()
 	bookFileName = ""
+	backupFound = False
 	for file in bookFiles:
 		filename, extension = os.path.splitext(file)
-		if extension == ".cbz":
-			bookFileName = file
-		if extension == ".cbz_old":
-			print("{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after moving or deleting the CBZ_OLD file.\n".format(os.getcwd()))
-			return False
+		if not backedup:
+			if extension == ".cbz":
+				bookFileName = file
+			if extension == ".cbz_old":
+				print("{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after either deleting the CBZ_OLD file or adding \"backedup\" as a flag on the input.\n".format(os.getcwd()))
+				return False
+		else:
+			if extension == ".cbz":
+				bookFileName = file
+			if extension == ".cbz_old":
+				backupFound = True
+	
+	if backedup and not backupFound:
+		print("{} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n".format(os.getcwd()))
+		return False
 	
 	return bookFileName
+
+def getBookFlags(flags):
+	manga = False
+	backedup = False
+	unknownFlag = False
+	# Parse book flags
+	for flag in flags:
+		flag = flag.strip()
+		if flag == "manga":
+			manga = True
+		elif flag == "backedup":
+			backedup = True
+		else:
+			unknownFlag = True
+	return manga, backedup, unknownFlag
 
 if __name__ == "__main__":
 	main()

@@ -148,24 +148,55 @@ class TestComicSpreadStitch(unittest.TestCase):
 		# Directory has no CBZ file
 		noCBZ = "D:\Calibre Library\Diane Duane\A Wizard Abroad (686)"
 		os.chdir(noCBZ)
-		self.assertEqual(comicSpreadStitch.findCBZFile(), "", "{} should not have a CBZ file.".format(noCBZ))
+		self.assertEqual(comicSpreadStitch.findCBZFile(False), "", "{} should not have a CBZ file.".format(noCBZ))
 		
 		# Directory has a CBZ_OLD file
 		yesCBZOLD = "D:\Calibre Library\Erik Larsen\Savage Dragon #180 (1427)"
 		os.chdir(yesCBZOLD)
 		capturedOutput = io.StringIO()
 		sys.stdout = capturedOutput
-		file = comicSpreadStitch.findCBZFile()
+		file = comicSpreadStitch.findCBZFile(False)
 		sys.stdout = sys.__stdout__
 		self.assertFalse(file, "{} should have a CBZ_OLD file.".format(yesCBZOLD))
 		self.assertEqual(capturedOutput.getvalue(),
-			"{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after moving or deleting the CBZ_OLD file.\n\n".format(yesCBZOLD),
+			"{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after either deleting the CBZ_OLD file or adding \"backedup\" as a flag on the input.\n\n".format(yesCBZOLD),
 			"Console output is incorrect.")
 		
 		# Directory has a CBZ file and no CBZ_OLD file
 		correctFilesDir = "D:\Calibre Library\Erik Larsen\Savage Dragon #179 (1428)"
 		os.chdir(correctFilesDir)
-		self.assertEqual(comicSpreadStitch.findCBZFile(), "Savage Dragon #179 - Erik Larsen.cbz", "{} should have a CBZ file but not a CBZ_OLD file.".format(correctFilesDir))
+		self.assertEqual(comicSpreadStitch.findCBZFile(False), "Savage Dragon #179 - Erik Larsen.cbz", "{} should have a CBZ file but not a CBZ_OLD file.".format(correctFilesDir))
+		
+		# Directory has a CBZ_OLD file, but backedup flag is set
+		os.chdir(yesCBZOLD)
+		self.assertEqual(comicSpreadStitch.findCBZFile(True), "Savage Dragon #180 - Erik Larsen.cbz", "The CBZ_OLD file in {} should be ignored because the backedup flag is set.".format(yesCBZOLD))
+		
+		# Directory has no CBZ_OLD file, but backedup flag is set
+		os.chdir(correctFilesDir)
+		capturedOutput = io.StringIO()
+		sys.stdout = capturedOutput
+		file = comicSpreadStitch.findCBZFile(True)
+		sys.stdout = sys.__stdout__
+		self.assertFalse(file, "{} should not have a CBZ_OLD file.".format(correctFilesDir))
+		self.assertEqual(capturedOutput.getvalue(),
+			"{} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n\n".format(correctFilesDir),
+			"Console output is incorrect.")
+	
+	def test_getBookFlags(self):
+		# No flags
+		self.assertEqual(comicSpreadStitch.getBookFlags([]), (False, False, False), "All flags should be false")
+		
+		# Manga flag only
+		self.assertEqual(comicSpreadStitch.getBookFlags(["manga"]), (True, False, False), "Manga flag should be true")
+		
+		# Backedup flag only
+		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup"]), (False, True, False), "Backedup flag should be true")
+		
+		# Unknown flag only
+		self.assertEqual(comicSpreadStitch.getBookFlags(["blah"]), (False, False, True), "Unknown flag should be true")
+		
+		# Multiple flags
+		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup", "manga"]), (True, True, False), "Manga and backedup flags should be true")
 
 if __name__ == "__main__":
 	unittest.main()
