@@ -125,7 +125,7 @@ def printSuccess(bookFileName, pagesList):
 	if numPages == 1:
 		pagesString += "page {}".format(pagesList[0][0])
 	elif numPages == 2:
-		if not pagesList[0][1] == "l" or not pagesList[0][1] == "r":
+		if not pagesList[0][1] == "l" and not pagesList[0][1] == "r":
 			pagesDeleted = 1
 		pagesString += "pages {} and {}".format(pagesList[0][0], pagesList[1][0] - pagesDeleted)
 	elif numPages > 2:
@@ -136,12 +136,12 @@ def printSuccess(bookFileName, pagesList):
 				# Not incrementing pagesDeleted because there's no more for it to affect
 			elif i == numPages - 2:
 				pagesString += "{}, and ".format(pagesList[i][0] - pagesDeleted)
-				if not pagesList[0][1] == "l" or not pagesList[0][1] == "r":
-					pagesDeleted++
+				if not pagesList[i][1] == "l" and not pagesList[i][1] == "r":
+					pagesDeleted += 1
 			else:
 				pagesString += "{}, ".format(pagesList[i][0] - pagesDeleted)
-				if not pagesList[0][1] == "l" or not pagesList[0][1] == "r":
-					pagesDeleted++
+				if not pagesList[i][1] == "l" and not pagesList[i][1] == "r":
+					pagesDeleted += 1
 	
 	print("{} successfully altered on {}.".format(bookFileName, pagesString))
 

@@ -57,6 +57,13 @@ class TestComicSpreadStitch(unittest.TestCase):
 		
 		### No modifiers above this line
 		
+		# 1 rotation followed by 1 spread
+		capturedOutput = io.StringIO()
+		sys.stdout = capturedOutput
+		comicSpreadStitch.printSuccess("Test book", [[4, "l"], [6, ""]])
+		sys.stdout = sys.__stdout__
+		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on pages 4 and 6.\n", "Console output is wrong for 2 spreads and 1 rotation.")
+		
 		# 2 spreads, 1 rotation
 		capturedOutput = io.StringIO()
 		sys.stdout = capturedOutput
