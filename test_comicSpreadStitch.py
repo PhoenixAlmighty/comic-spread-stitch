@@ -3,6 +3,7 @@ import comicSpreadStitch
 import os
 import io
 import sys
+import numpy as np
 
 class TestComicSpreadStitch(unittest.TestCase):
 	# printSuccess tests
@@ -233,6 +234,12 @@ class TestComicSpreadStitch(unittest.TestCase):
 	# Manga and backedup flags together
 	def test_getBookFlags_mangaAndBackedup(self):
 		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup", "manga"]), (True, True, False), "Manga and backedup flags should be true")
+	
+	# processPages tests — these will probably require some test images to be stored in a subdirectory
+	
+	# The line of code that tells me whether two images are identical or not:
+	# self.assertTrue(image1.shape == image2.shape and not(np.bitwise_xor(image1,image2).any()))
+	# This may require some testing to be sure it behaves as expected
 
 if __name__ == "__main__":
 	unittest.main()
