@@ -236,46 +236,288 @@ class TestComicSpreadStitch(unittest.TestCase):
 	def test_getBookFlags_mangaAndBackedup(self):
 		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup", "manga"]), (True, True, False), "Manga and backedup flags should be true")
 	
-	# processPages tests — these will probably require some test images to be stored in a subdirectory
-	
-	# The line of code that tells me whether two images are identical or not:
-	# self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()))
-	# This may require some testing to be sure it behaves as expected
+	# processPages tests
+	# The images used here are from https://github.com/mohammadimtiazz/standard-test-images-for-Image-Processing
 	
 	# Stitch only
-	# def test_processPages_stitchOnly(self):
-		# testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		# os.chdir(testImgDir)
-		# testImg = cv2.imread("baboonboat.png")
-		# baboon = cv2.imread("baboon.png")
-		# boat = cv2.imread("boat.png")
-		# Call processPages with proper parameters
-		# Retrieve current directory state
+	def test_processPages_stitchOnly(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("baboonboat.png")
+		baboon = cv2.imread("baboon.png")
+		boat = cv2.imread("boat.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], False)
+		
+		# By this point, boat.png should no longer exist and baboon.png should match baboonboat.png
+		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
+		imgs = os.listdir()
+		processedImg = cv2.imread("baboon.png")
+		
 		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		cv2.imwrite("boat.png", boat)
+		
 		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
+		
 		# Check directory state
+		self.assertTrue("baboon.png" in imgs, "baboon.png is missing")
+		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
 	
 	# Stitch back cover only
+	def test_processPages_stitchBackCoverOnly(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("boatbaboon.png")
+		baboon = cv2.imread("baboon.png")
+		boat = cv2.imread("boat.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], False)
+		
+		# By this point, baboon.png should still exist and boat.png should match boatbaboon.png
+		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
+		imgs = os.listdir()
+		processedImg = cv2.imread("boat.png")
+		
+		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		cv2.imwrite("boat.png", boat)
+		
+		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
+		
+		# Check directory state
+		self.assertTrue("baboon.png" in imgs, "baboon.png is missing")
+		self.assertTrue("boat.png" in imgs, "boat.png is missing")
 	
 	# Rotate right only
+	def test_processPages_rotateRight(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("babooncw.png")
+		baboon = cv2.imread("baboon.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], False)
+		
+		# By this point, baboon.png should match babooncw.png
+		processedImg = cv2.imread("baboon.png")
+		
+		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		
+		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
 	
 	# Stitch and rotate right
+	def test_processPages_stitchRotateRight(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("baboonboatcw.png")
+		baboon = cv2.imread("baboon.png")
+		boat = cv2.imread("boat.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], False)
+		
+		# By this point, boat.png should no longer exist and baboon.png should match baboonboatcw.png
+		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
+		imgs = os.listdir()
+		processedImg = cv2.imread("baboon.png")
+		
+		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		cv2.imwrite("boat.png", boat)
+		
+		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
+		
+		# Check directory state
+		self.assertTrue("baboon.png" in imgs, "baboon.png is missing")
+		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
 	
 	# Rotate left only
+	def test_processPages_rotateLeft(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("baboonccw.png")
+		baboon = cv2.imread("baboon.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], False)
+		
+		# By this point, baboon.png should match baboonccw.png
+		processedImg = cv2.imread("baboon.png")
+		
+		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		
+		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
 	
 	# Stitch and rotate left
+	def test_processPages_stitchRotateLeft(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("baboonboatccw.png")
+		baboon = cv2.imread("baboon.png")
+		boat = cv2.imread("boat.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], False)
+		
+		# By this point, boat.png should no longer exist and baboon.png should match baboonboatccw.png
+		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
+		imgs = os.listdir()
+		processedImg = cv2.imread("baboon.png")
+		
+		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		cv2.imwrite("boat.png", boat)
+		
+		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
+		
+		# Check directory state
+		self.assertTrue("baboon.png" in imgs, "baboon.png is missing")
+		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
 	
 	# Stitch only in manga mode
+	def test_processPages_stitchOnlyManga(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("boatbaboon.png")
+		baboon = cv2.imread("baboon.png")
+		boat = cv2.imread("boat.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], True)
+		
+		# By this point, boat.png should no longer exist and baboon.png should match boatbaboon.png
+		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
+		imgs = os.listdir()
+		processedImg = cv2.imread("baboon.png")
+		
+		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		cv2.imwrite("boat.png", boat)
+		
+		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
+		
+		# Check directory state
+		self.assertTrue("baboon.png" in imgs, "baboon.png is missing")
+		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
 	
 	# Stitch back cover only in manga mode
+	def test_processPages_stitchBackCoverOnlyManga(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("baboonboat.png")
+		baboon = cv2.imread("baboon.png")
+		boat = cv2.imread("boat.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], True)
+		
+		# By this point, baboon.png should still exist and boat.png should match baboonboat.png
+		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
+		imgs = os.listdir()
+		processedImg = cv2.imread("boat.png")
+		
+		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		cv2.imwrite("boat.png", boat)
+		
+		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
+		
+		# Check directory state
+		self.assertTrue("baboon.png" in imgs, "baboon.png is missing")
+		self.assertTrue("boat.png" in imgs, "boat.png is missing")
 	
 	# Rotate right only in manga mode
+	def test_processPages_rotateRightManga(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("babooncw.png")
+		baboon = cv2.imread("baboon.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], True)
+		
+		# By this point, baboon.png should match babooncw.png
+		processedImg = cv2.imread("baboon.png")
+		
+		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		
+		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
 	
 	# Stitch and rotate right in manga mode
+	def test_processPages_stitchRotateRightManga(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("boatbabooncw.png")
+		baboon = cv2.imread("baboon.png")
+		boat = cv2.imread("boat.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], True)
+		
+		# By this point, boat.png should no longer exist and baboon.png should match boatbabooncw.png
+		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
+		imgs = os.listdir()
+		processedImg = cv2.imread("baboon.png")
+		
+		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		cv2.imwrite("boat.png", boat)
+		
+		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
+		
+		# Check directory state
+		self.assertTrue("baboon.png" in imgs, "baboon.png is missing")
+		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
 	
 	# Rotate left only in manga mode
+	def test_processPages_rotateLeftManga(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("baboonccw.png")
+		baboon = cv2.imread("baboon.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], True)
+		
+		# By this point, baboon.png should match baboonccw.png
+		processedImg = cv2.imread("baboon.png")
+		
+		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		
+		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
 	
 	# Stitch and rotate left in manga mode
+	def test_processPages_stitchRotateLeftManga(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		testImg = cv2.imread("boatbaboonccw.png")
+		baboon = cv2.imread("baboon.png")
+		boat = cv2.imread("boat.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], True)
+		
+		# By this point, boat.png should no longer exist and baboon.png should match boatbaboonccw.png
+		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
+		imgs = os.listdir()
+		processedImg = cv2.imread("baboon.png")
+		
+		# Restore original directory state
+		cv2.imwrite("baboon.png", baboon)
+		cv2.imwrite("boat.png", boat)
+		
+		# Compare output with testImg
+		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
+		
+		# Check directory state
+		self.assertTrue("baboon.png" in imgs, "baboon.png is missing")
+		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
 
 if __name__ == "__main__":
 	unittest.main()
