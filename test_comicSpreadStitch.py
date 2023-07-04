@@ -4,6 +4,7 @@ import os
 import io
 import sys
 import numpy as np
+import cv2
 
 class TestComicSpreadStitch(unittest.TestCase):
 	# printSuccess tests
@@ -171,13 +172,13 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# Directory has no CBZ file
 	def test_findCBZFile_noCBZ(self):
-		noCBZ = "D:\Calibre Library\Diane Duane\A Wizard Abroad (686)"
+		noCBZ = os.path.join(os.path.dirname(__file__), "test-resources", "no-cbz")
 		os.chdir(noCBZ)
 		self.assertEqual(comicSpreadStitch.findCBZFile(False), "", "{} should not have a CBZ file.".format(noCBZ))
 		
 	# Directory has a CBZ_OLD file
 	def test_findCBZFile_CBZOLD(self):
-		yesCBZOLD = "D:\Calibre Library\Erik Larsen\Savage Dragon #180 (1427)"
+		yesCBZOLD = os.path.join(os.path.dirname(__file__), "test-resources", "cbz-old")
 		os.chdir(yesCBZOLD)
 		capturedOutput = io.StringIO()
 		sys.stdout = capturedOutput
@@ -190,19 +191,19 @@ class TestComicSpreadStitch(unittest.TestCase):
 		
 	# Directory has a CBZ file and no CBZ_OLD file
 	def test_findCBZFile_onlyCBZ(self):
-		correctFilesDir = "D:\Calibre Library\Erik Larsen\Savage Dragon #179 (1428)"
+		correctFilesDir = os.path.join(os.path.dirname(__file__), "test-resources", "cbz")
 		os.chdir(correctFilesDir)
-		self.assertEqual(comicSpreadStitch.findCBZFile(False), "Savage Dragon #179 - Erik Larsen.cbz", "{} should have a CBZ file but not a CBZ_OLD file.".format(correctFilesDir))
+		self.assertEqual(comicSpreadStitch.findCBZFile(False), "dummy.cbz", "{} should have a CBZ file but not a CBZ_OLD file.".format(correctFilesDir))
 		
 	# Directory has a CBZ_OLD file, but backedup flag is set
 	def test_findCBZFile_backedupCBZOLD(self):
-		yesCBZOLD = "D:\Calibre Library\Erik Larsen\Savage Dragon #180 (1427)"
+		yesCBZOLD = os.path.join(os.path.dirname(__file__), "test-resources", "cbz-old")
 		os.chdir(yesCBZOLD)
-		self.assertEqual(comicSpreadStitch.findCBZFile(True), "Savage Dragon #180 - Erik Larsen.cbz", "The CBZ_OLD file in {} should be ignored because the backedup flag is set.".format(yesCBZOLD))
+		self.assertEqual(comicSpreadStitch.findCBZFile(True), "dummy.cbz", "The CBZ_OLD file in {} should be ignored because the backedup flag is set.".format(yesCBZOLD))
 		
 	# Directory has no CBZ_OLD file, but backedup flag is set
 	def test_findCBZFile_backedupCBZ(self):
-		correctFilesDir = "D:\Calibre Library\Erik Larsen\Savage Dragon #179 (1428)"
+		correctFilesDir = os.path.join(os.path.dirname(__file__), "test-resources", "cbz")
 		os.chdir(correctFilesDir)
 		capturedOutput = io.StringIO()
 		sys.stdout = capturedOutput
@@ -238,8 +239,43 @@ class TestComicSpreadStitch(unittest.TestCase):
 	# processPages tests — these will probably require some test images to be stored in a subdirectory
 	
 	# The line of code that tells me whether two images are identical or not:
-	# self.assertTrue(image1.shape == image2.shape and not(np.bitwise_xor(image1,image2).any()))
+	# self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()))
 	# This may require some testing to be sure it behaves as expected
+	
+	# Stitch only
+	# def test_processPages_stitchOnly(self):
+		# testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		# os.chdir(testImgDir)
+		# testImg = cv2.imread("baboonboat.png")
+		# baboon = cv2.imread("baboon.png")
+		# boat = cv2.imread("boat.png")
+		# Call processPages with proper parameters
+		# Retrieve current directory state
+		# Restore original directory state
+		# Compare output with testImg
+		# Check directory state
+	
+	# Stitch back cover only
+	
+	# Rotate right only
+	
+	# Stitch and rotate right
+	
+	# Rotate left only
+	
+	# Stitch and rotate left
+	
+	# Stitch only in manga mode
+	
+	# Stitch back cover only in manga mode
+	
+	# Rotate right only in manga mode
+	
+	# Stitch and rotate right in manga mode
+	
+	# Rotate left only in manga mode
+	
+	# Stitch and rotate left in manga mode
 
 if __name__ == "__main__":
 	unittest.main()
