@@ -13,10 +13,16 @@ def main():
 		lines = pagesFile.readlines()
 	
 	for line in lines:
-		manga = False
+		# manga = False
+		# backedup = False
+		# unknownFlag = False
 		bookFileName = ""
 		parts = line.split("|")
 		bookDir = parts[0]
+		# if len(parts) > 2:
+		manga, backedup, unknownFlag = getBookFlags(parts[2:])
+		if unknownFlag:
+			print("Unknown flag detected for {}. Skipping.".format(bookDir))
 	
 		# check for errors in input
 		if not bookDirIsValid(bookDir):
@@ -45,13 +51,12 @@ def main():
 			os.rmdir(imgList[0])
 			imgList = os.listdir()
 		
-		if len(parts) > 2 and parts[2].strip() == "manga":
-			manga = True
 		stitchPages(stitcher, imgList, pages, manga)
 		
 		imgList = os.listdir()
 		os.chdir("..")
-		os.rename(bookFileName, bookFileName + "_old")
+		if not backedup:
+			os.rename(bookFileName, bookFileName + "_old")
 		
 		# create new CBZ file with the combined pages
 		with ZipFile(bookFileName, 'w') as newZip:
@@ -66,29 +71,55 @@ def main():
 	
 	print("{} books evaluated. See output above for results.\n".format(len(lines)))
 
-def combinePages(imgList, pageList, manga):
+def processPages(imgList, pageList, manga):
 	for page in pageList:
-		# read in the two pages I want to combine
-		# this is page - 1 and page because python lists are 0-indexed and the page numbers are 1-indexed
-		# print("{}, {}".format(page - 1, page))
-		img1 = cv2.imread(imgList[page - 1])
-		img2 = cv2.imread(imgList[page])
+		# rotate without stitching
+		if page[1] == "l" or page[1] == "r":
+			# read in the page I want
+			img = cv2.imread(imgList[page[0] - 1])
+			
+			if page[1] == "l":
+				# rotate left
+				img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+			elif page[1] == "r":
+				# rotate right
+				img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+			
+			# save image
+			cv2.imwrite(imgList[page[0] - 1], img)
 		
-		# horizontally concatenate the two pages
-		if manga:
-			combImg = cv2.hconcat([img2, img1])
+		# stitch and possibly rotate
 		else:
-			combImg = cv2.hconcat([img1, img2])
-		
-		# overwrite the first page with the combined pages
-		cv2.imwrite(imgList[page - 1], combImg)
-		
-		# remove the second page so I don't see it again separately from the combined pages
-		# unless I'm combining the front and back covers, in which case the front cover gets to stay as it is
-		if not page == 0:
-			os.remove(imgList[page])
+			# read in the two pages I want to combine
+			# this is page - 1 and page because python lists are 0-indexed and the page numbers are 1-indexed
+			# print("{}, {}".format(page - 1, page))
+			img1 = cv2.imread(imgList[page[0] - 1])
+			img2 = cv2.imread(imgList[page[0]])
+			
+			# horizontally concatenate the two pages
+			if manga:
+				combImg = cv2.hconcat([img2, img1])
+			else:
+				combImg = cv2.hconcat([img1, img2])
+			
+			# rotate if needed
+			if page[1] == "m":
+				# rotate left
+				combImg = cv2.rotate(combImg, cv2.ROTATE_90_COUNTERCLOCKWISE)
+			elif page[1] == "s":
+				# rotate right
+				combImg = cv2.rotate(combImg, cv2.ROTATE_90_CLOCKWISE)
+			
+			# overwrite the first page with the combined pages
+			cv2.imwrite(imgList[page[0] - 1], combImg)
+			
+			# remove the second page so I don't see it again separately from the combined pages
+			# unless I'm combining the front and back covers, in which case the front cover gets to stay as it is
+			if not page[0] == 0:
+				os.remove(imgList[page[0]])
 
 # Note: the below function did not stitch any images together when applied to Big Girls, Vol. 1; it just concatenated all of them
+# TODO: update stitchPages to work with the new pageList format and the modifiers
 
 def stitchPages(stitcher, imgList, pageList, manga):
 	stitchedPages = []
@@ -128,26 +159,34 @@ def stitchPages(stitcher, imgList, pageList, manga):
 
 def printSuccess(bookFileName, pagesList):
 	pagesString = ""
-	if pagesList[0] == 0 and len(pagesList) == 1:
+	pagesDeleted = 0
+	if pagesList[0][0] == 0 and len(pagesList) == 1:
 		pagesString = "the back cover"
 		del pagesList[0]
-	elif pagesList[0] == 0 and len(pagesList) > 1:
+	elif pagesList[0][0] == 0 and len(pagesList) > 1:
 		pagesString = "the back cover and "
 		del pagesList[0]
 	numPages = len(pagesList)
 	if numPages == 1:
-		pagesString += "page {}".format(pagesList[0])
+		pagesString += "page {}".format(pagesList[0][0])
 	elif numPages == 2:
-		pagesString += "pages {} and {}".format(pagesList[0], pagesList[1] - 1)
+		if not pagesList[0][1] == "l" and not pagesList[0][1] == "r":
+			pagesDeleted = 1
+		pagesString += "pages {} and {}".format(pagesList[0][0], pagesList[1][0] - pagesDeleted)
 	elif numPages > 2:
 		pagesString += "pages "
 		for i in range(numPages):
 			if i == numPages - 1:
-				pagesString += "{}".format(pagesList[i] - i)
+				pagesString += "{}".format(pagesList[i][0] - pagesDeleted)
+				# Not incrementing pagesDeleted because there's no more for it to affect
 			elif i == numPages - 2:
-				pagesString += "{}, and ".format(pagesList[i] - i)
+				pagesString += "{}, and ".format(pagesList[i][0] - pagesDeleted)
+				if not pagesList[i][1] == "l" and not pagesList[i][1] == "r":
+					pagesDeleted += 1
 			else:
-				pagesString += "{}, ".format(pagesList[i] - i)
+				pagesString += "{}, ".format(pagesList[i][0] - pagesDeleted)
+				if not pagesList[i][1] == "l" and not pagesList[i][1] == "r":
+					pagesDeleted += 1
 	
 	print("{} successfully altered on {}.".format(bookFileName, pagesString))
 
@@ -162,35 +201,72 @@ def bookDirIsValid(bookDir):
 	return True
 
 def convertPageList(pageString, bookDir):
+	# validate that input has pages to combine
 	if pageString == "":
 		print("{} has no pages to combine. Check your input.".format(bookDir))
 		return False
+	
+	# add pages to list of ints while validating that each page has a number and, if any modifiers, ones that match what's defined
 	pageStringList = pageString.split(",")
 	pageIntList = []
 	for page in pageStringList:
 		page = page.strip()
+		lastChar = page[-1]
+		if not lastChar.isdigit():
+			if not lastChar == "r" and not lastChar == "s" and not lastChar == "l" and not lastChar == "m":
+				print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available per-page commands. Check your input.".format(bookDir))
+				return False
+			page = page[:-1]
+		else:
+			lastChar = ""
 		if not page.isdigit():
-			print("Page list for {} contains at least one thing that's not a number. Check your input.".format(bookDir))
+			print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available per-page commands. Check your input.".format(bookDir))
 			return False
 		else:
-			pageIntList.append(int(page))
+			pageIntList.append([int(page), lastChar])
 	
 	pageIntList.sort()
 	
 	return pageIntList
 
-def findCBZFile():
+def findCBZFile(backedup):
 	bookFiles = os.listdir()
 	bookFileName = ""
+	backupFound = False
 	for file in bookFiles:
 		filename, extension = os.path.splitext(file)
-		if extension == ".cbz":
-			bookFileName = file
-		if extension == ".cbz_old":
-			print("{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after moving or deleting the CBZ_OLD file.\n".format(os.getcwd()))
-			return False
+		if not backedup:
+			if extension == ".cbz":
+				bookFileName = file
+			if extension == ".cbz_old":
+				print("{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after either deleting the CBZ_OLD file or adding \"backedup\" as a flag on the input.\n".format(os.getcwd()))
+				return False
+		else:
+			if extension == ".cbz":
+				bookFileName = file
+			if extension == ".cbz_old":
+				backupFound = True
+	
+	if backedup and not backupFound:
+		print("{} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n".format(os.getcwd()))
+		return False
 	
 	return bookFileName
+
+def getBookFlags(flags):
+	manga = False
+	backedup = False
+	unknownFlag = False
+	# Parse book flags
+	for flag in flags:
+		flag = flag.strip()
+		if flag == "manga":
+			manga = True
+		elif flag == "backedup":
+			backedup = True
+		else:
+			unknownFlag = True
+	return manga, backedup, unknownFlag
 
 if __name__ == "__main__":
 	main()
