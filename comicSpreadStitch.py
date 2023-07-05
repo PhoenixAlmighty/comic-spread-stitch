@@ -32,7 +32,7 @@ def main():
 		
 		os.chdir(bookDir)
 		
-		bookFileName = findCBZFile()
+		bookFileName = findCBZFile(backedup)
 		if bookFileName == "":
 			print("{} has no CBZ files in it. Check your input.".format(bookDir))
 		if not bookFileName:
