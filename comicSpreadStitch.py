@@ -22,6 +22,7 @@ def main():
 		manga, backedup, unknownFlag = getBookFlags(parts[2:])
 		if unknownFlag:
 			print("Unknown flag detected for {}. Skipping.".format(bookDir))
+			continue
 	
 		# check for errors in input
 		if not bookDirIsValid(bookDir):
