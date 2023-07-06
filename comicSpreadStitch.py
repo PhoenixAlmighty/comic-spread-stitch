@@ -7,69 +7,90 @@ tempPath = "temp"
 
 def main():
 	lines = []
+	processed = 0
+	skipped = 0
+	errors = 0
 	
 	with open("pagesToCombine.txt", "r") as pagesFile:
 		lines = pagesFile.readlines()
 	
 	for line in lines:
-		# manga = False
-		# backedup = False
-		# unknownFlag = False
-		bookFileName = ""
-		parts = line.split("|")
-		bookDir = parts[0]
-		# if len(parts) > 2:
-		manga, backedup, unknownFlag = getBookFlags(parts[2:])
-		if unknownFlag:
-			print("Unknown flag detected for {}. Skipping.".format(bookDir))
-			continue
-	
-		# check for errors in input
-		if not bookDirIsValid(bookDir):
-			continue
-		pages = convertPageList(parts[1], bookDir)
-		if not pages:
-			continue
+		try:
+			bookDir = ""
+			parts = line.split("|")
+			bookDir = parts[0]
+			if (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2:
+				print("The line for {} is missing page numbers.".format(bookDir.strip()))
+				skipped += 1
+				continue
+			manga, backedup, unknownFlag = getBookFlags(parts[2:])
+			if unknownFlag:
+				print("Unknown flag detected for {}. Skipping.".format(bookDir))
+				skipped += 1
+				continue
 		
-		os.chdir(bookDir)
-		
-		bookFileName = findCBZFile(backedup)
-		if bookFileName == "":
-			print("{} has no CBZ files in it. Check your input.".format(bookDir))
-		if not bookFileName:
-			continue
-		
-		with ZipFile(bookFileName, 'r') as zip:
-			zip.extractall(path = tempPath)
-		
-		os.chdir(tempPath)
-		imgList = os.listdir()
-		# check to see if the image files are in a subdirectory and bring them out if so
-		while os.path.isdir(imgList[0]):
-			for file in os.listdir(imgList[0]):
-				shutil.move(os.path.join(imgList[0], file), file)
-			os.rmdir(imgList[0])
+			# check for errors in input
+			if not bookDirIsValid(bookDir):
+				skipped += 1
+				continue
+			pages = convertPageList(parts[1], bookDir)
+			if not pages:
+				skipped += 1
+				continue
+			
+			os.chdir(bookDir)
+			
+			bookFileName = findCBZFile(backedup)
+			if bookFileName == "":
+				print("{} has no CBZ files in it. Check your input.".format(bookDir))
+			if not bookFileName:
+				skipped += 1
+				continue
+			
+			with ZipFile(bookFileName, 'r') as zip:
+				zip.extractall(path = tempPath)
+			
+			os.chdir(tempPath)
 			imgList = os.listdir()
-		
-		processPages(imgList, pages, manga)
-		
-		imgList = os.listdir()
-		os.chdir("..")
-		if not backedup:
-			os.rename(bookFileName, bookFileName + "_old")
-		
-		# create new CBZ file with the combined pages
-		with ZipFile(bookFileName, 'w') as newZip:
-			for file in imgList:
-				filePath = os.path.join(tempPath, file)
-				newZip.write(filePath, arcname = file)
-				os.remove(filePath)
-		
-		os.rmdir(tempPath)
-		
-		printSuccess(bookFileName, pages)
+			# check to see if the image files are in a subdirectory and bring them out if so
+			while os.path.isdir(imgList[0]):
+				for file in os.listdir(imgList[0]):
+					shutil.move(os.path.join(imgList[0], file), file)
+				os.rmdir(imgList[0])
+				imgList = os.listdir()
+			
+			# check whether imgList is long enough to account for all of pages
+			if (pages[-1][1] in ["l", "r"] and len(imgList) < pages[-1][0]) or len(imgList) < pages[-1][0] + 1:
+				print("{} skipped because the last page to process is past the end of the book.".format(bookDir))
+				skipped += 1
+				continue
+			
+			processPages(imgList, pages, manga)
+			
+			imgList = os.listdir()
+			os.chdir("..")
+			if not backedup:
+				os.rename(bookFileName, bookFileName + "_old")
+			
+			# create new CBZ file with the combined pages
+			with ZipFile(bookFileName, 'w') as newZip:
+				for file in imgList:
+					filePath = os.path.join(tempPath, file)
+					newZip.write(filePath, arcname = file)
+					os.remove(filePath)
+			
+			os.rmdir(tempPath)
+			
+			printSuccess(bookFileName, pages)
+			processed += 1
+		except Exception as err:
+			errors += 1
+			if bookDir == "":
+				print("Error occurred before book directory could be read in. Error message:\n", err)
+			else:
+				print("Error occurred while processing {}. Error message:\n".format(bookDir),err)
 	
-	print("{} books evaluated. See output above for results.\n".format(len(lines)))
+	print("{} books processed, {} skipped, and {} errors. See output above for results.\n".format(processed, skipped, errors))
 
 def processPages(imgList, pageList, manga):
 	for page in pageList:
@@ -175,13 +196,13 @@ def convertPageList(pageString, bookDir):
 		lastChar = page[-1]
 		if not lastChar.isdigit():
 			if not lastChar == "r" and not lastChar == "s" and not lastChar == "l" and not lastChar == "m":
-				print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available per-page commands. Check your input.".format(bookDir))
+				print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.".format(bookDir))
 				return False
 			page = page[:-1]
 		else:
 			lastChar = ""
 		if not page.isdigit():
-			print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available per-page commands. Check your input.".format(bookDir))
+			print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.".format(bookDir))
 			return False
 		else:
 			pageIntList.append([int(page), lastChar])

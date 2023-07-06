@@ -141,7 +141,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		pageList = comicSpreadStitch.convertPageList("1,2,a", "Test book directory")
 		sys.stdout = sys.__stdout__
 		self.assertFalse(pageList, "Should return False if string contains letters that aren't attached to numbers.")
-		self.assertEqual(capturedOutput.getvalue(), "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available per-page commands. Check your input.\n", "Console output is incorrect for non-numeric page list.")
+		self.assertEqual(capturedOutput.getvalue(), "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.\n", "Console output is incorrect for non-numeric page list.")
 		
 	# Letters in list that don't match the defined modifiers
 	def test_convertPageList_wrongModifiers(self):
@@ -150,7 +150,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		pageList = comicSpreadStitch.convertPageList("1,2,3a", "Test book directory")
 		sys.stdout = sys.__stdout__
 		self.assertFalse(pageList, "Should return False if string contains letters that aren't attached to numbers.")
-		self.assertEqual(capturedOutput.getvalue(), "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available per-page commands. Check your input.\n", "Console output is incorrect for non-defined modifiers.")
+		self.assertEqual(capturedOutput.getvalue(), "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.\n", "Console output is incorrect for non-defined modifiers.")
 		
 	# Only numbers in list
 	def test_convertPageList_numbersOnly(self):
