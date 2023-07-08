@@ -98,8 +98,12 @@ def main():
 
 def processPages(imgList, pageList, manga):
 	for page in pageList:
+		# delete page
+		if page[1] == "d":
+			os.remove(imgList[page[0] - 1])
+		
 		# rotate without stitching
-		if page[1] == "l" or page[1] == "r":
+		elif page[1] in ["l", "r"]:
 			# read in the page I want
 			img = cv2.imread(imgList[page[0] - 1])
 			
@@ -146,33 +150,61 @@ def processPages(imgList, pageList, manga):
 def printSuccess(bookFileName, pagesList):
 	pagesString = ""
 	pagesDeleted = 0
-	if pagesList[0][0] == 0 and len(pagesList) == 1:
-		pagesString = "the back cover"
-		del pagesList[0]
-	elif pagesList[0][0] == 0 and len(pagesList) > 1:
-		pagesString = "the back cover and "
-		del pagesList[0]
-	numPages = len(pagesList)
-	if numPages == 1:
-		pagesString += "page {}".format(pagesList[0][0])
-	elif numPages == 2:
-		if not pagesList[0][1] == "l" and not pagesList[0][1] == "r":
-			pagesDeleted = 1
-		pagesString += "pages {} and {}".format(pagesList[0][0], pagesList[1][0] - pagesDeleted)
-	elif numPages > 2:
+	modifiedPagesList = []
+	
+	# Make modifiedPagesList a list of all page numbers in the new file that have been modified and are still there
+	for i in range(len(pagesList)):
+		if pagesList[i][1] == "d":
+			pagesDeleted += 1
+		elif pagesList[i][1] in ["l","r"]:
+			modifiedPagesList.append(pagesList[i][0] - pagesDeleted)
+		else:
+			modifiedPagesList.append(pagesList[i][0] - pagesDeleted)
+			if pagesList[i][0] != 0:
+				pagesDeleted += 1
+	
+	pagesModified = len(modifiedPagesList)
+	
+	if pagesModified == 0:
+		print("{} has had {} pages deleted.".format(bookFileName, pagesDeleted))
+		return
+	
+	if modifiedPagesList[0] == 0:
+		
+		# Back cover only
+		if pagesModified == 1:
+			pagesString = "the back cover"
+		
+		# Back cover and other pages
+		elif pagesModified > 1:
+			pagesString = "the back cover and "
+		del modifiedPagesList[0]
+		pagesModified = len(modifiedPagesList)
+	
+	# 1 non-back cover page
+	if pagesModified == 1:
+		pagesString += "page {}".format(modifiedPagesList[0])
+	
+	# 2 non-back cover pages
+	elif pagesModified == 2:
+		pagesString += "pages {} and {}".format(modifiedPagesList[0], modifiedPagesList[1])
+	
+	# More than 2 non-back cover pages
+	elif pagesModified > 2:
 		pagesString += "pages "
-		for i in range(numPages):
-			if i == numPages - 1:
-				pagesString += "{}".format(pagesList[i][0] - pagesDeleted)
-				# Not incrementing pagesDeleted because there's no more for it to affect
-			elif i == numPages - 2:
-				pagesString += "{}, and ".format(pagesList[i][0] - pagesDeleted)
-				if not pagesList[i][1] == "l" and not pagesList[i][1] == "r":
-					pagesDeleted += 1
+		for i in range(pagesModified):
+			
+			# Last page
+			if i == pagesModified - 1:
+				pagesString += "{}".format(modifiedPagesList[i])
+			
+			# Second to last page
+			elif i == pagesModified - 2:
+				pagesString += "{}, and ".format(modifiedPagesList[i])
+			
+			# At least 2 pages remaining
 			else:
-				pagesString += "{}, ".format(pagesList[i][0] - pagesDeleted)
-				if not pagesList[i][1] == "l" and not pagesList[i][1] == "r":
-					pagesDeleted += 1
+				pagesString += "{}, ".format(modifiedPagesList[i])
 	
 	print("{} successfully altered on {}.".format(bookFileName, pagesString))
 
@@ -199,7 +231,7 @@ def convertPageList(pageString, bookDir):
 		page = page.strip()
 		lastChar = page[-1]
 		if not lastChar.isdigit():
-			if not lastChar == "r" and not lastChar == "s" and not lastChar == "l" and not lastChar == "m":
+			if not lastChar in ["r", "s", "l", "m", "d"]:
 				print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.".format(bookDir))
 				return False
 			page = page[:-1]

@@ -88,14 +88,22 @@ class TestComicSpreadStitch(unittest.TestCase):
 		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, "m"], [6, ""]])
 		sys.stdout = sys.__stdout__
 		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, and 4.\n", "Console output is wrong for 3 spreads, 1 of which has been rotated.")
+	
+	# 3 page deletions, no modifications
+	def test_printSuccess_threeDeletions(self):
+		capturedOutput = io.StringIO()
+		sys.stdout = capturedOutput
+		comicSpreadStitch.printSuccess("Test book", [[2, "d"], [4, "d"], [6, "d"]])
+		sys.stdout = sys.__stdout__
+		self.assertEqual(capturedOutput.getvalue(), "Test book has had 3 pages deleted.\n", "Console output is wrong for 3 page deletions and no page modifications.")
 		
 	# Check that all modifiers are handled correctly
 	def test_printSuccess_allModifiers(self):
 		capturedOutput = io.StringIO()
 		sys.stdout = capturedOutput
-		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, "m"], [6, "l"], [8, "r"], [10, "s"], [12, ""]])
+		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, "m"], [6, "l"], [8, "r"], [10, "s"], [12, "d"], [14, ""]])
 		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, 4, 6, 8, and 9.\n", "At least one modifier has been handled incoreectly.")
+		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, 4, 6, 8, and 10.\n", "At least one modifier has been handled incorrectly.")
 	
 	# bookDirIsValid tests
 	
@@ -166,7 +174,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		
 	# Numbers, modifiers, and spaces in list
 	def test_convertPageList_numbersModifiersAndSpaces(self):
-		self.assertEqual(comicSpreadStitch.convertPageList("5l, 3r, 9s, 7m", "Test book directory"), [[3, "r"], [5, "l"], [7, "m"], [9, "s"]], "Should return a sorted list of lists, where each list is an integer followed by one of the following letters: l, m, r, s, without the whitespace triggering a return value of False.")
+		self.assertEqual(comicSpreadStitch.convertPageList("5l, 3r, 9s, 7m, 10d", "Test book directory"), [[3, "r"], [5, "l"], [7, "m"], [9, "s"], [10, "d"]], "Should return a sorted list of lists, where each list is an integer followed by one of the following letters: l, m, r, s, d, without the whitespace triggering a return value of False.")
 	
 	# findCBZFile tests
 	
@@ -379,6 +387,23 @@ class TestComicSpreadStitch(unittest.TestCase):
 		self.assertTrue("baboon.png" in imgs, "baboon.png is missing")
 		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
 	
+	# Delete
+	def test_processPages_delete(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		boat = cv2.imread("boat.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], False)
+		
+		# By this point, boat.png should no longer exist; nothing else should be changed
+		imgs = os.listdir()
+		
+		# Restore original directory state
+		cv2.imwrite("boat.png", boat)
+		
+		# Check directory state
+		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
+	
 	# Stitch only in manga mode
 	def test_processPages_stitchOnlyManga(self):
 		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
@@ -517,6 +542,23 @@ class TestComicSpreadStitch(unittest.TestCase):
 		
 		# Check directory state
 		self.assertTrue("baboon.png" in imgs, "baboon.png is missing")
+		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
+	
+	# Delete in manga mode
+	def test_processPages_deleteManga(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		boat = cv2.imread("boat.png")
+		
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], True)
+		
+		# By this point, boat.png should no longer exist; nothing else should be changed
+		imgs = os.listdir()
+		
+		# Restore original directory state
+		cv2.imwrite("boat.png", boat)
+		
+		# Check directory state
 		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
 
 if __name__ == "__main__":
