@@ -60,7 +60,7 @@ def main():
 				imgList = os.listdir()
 			
 			# check whether imgList is long enough to account for all of pages
-			if (pages[-1][1] in ["l", "r"] and len(imgList) < pages[-1][0]) or (not (pages[-1][1] in ["l", "r"]) and len(imgList) < pages[-1][0] + 1):
+			if (pages[-1][1] in ["l", "r", "d"] and len(imgList) < pages[-1][0]) or (not (pages[-1][1] in ["l", "r", "d"]) and len(imgList) < pages[-1][0] + 1):
 				print("{} skipped because the last page to process is past the end of the book.".format(bookDir))
 				skipped += 1
 				for file in imgList:
