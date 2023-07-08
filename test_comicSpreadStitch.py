@@ -176,6 +176,10 @@ class TestComicSpreadStitch(unittest.TestCase):
 	def test_convertPageList_numbersModifiersAndSpaces(self):
 		self.assertEqual(comicSpreadStitch.convertPageList("5l, 3r, 9s, 7m, 10d", "Test book directory"), [[3, "r"], [5, "l"], [7, "m"], [9, "s"], [10, "d"]], "Should return a sorted list of lists, where each list is an integer followed by one of the following letters: l, m, r, s, d, without the whitespace triggering a return value of False.")
 	
+	# Deletion range
+	def test_convertPageList_deletionRange(self):
+		self.assertEqual(comicSpreadStitch.convertPageList("4,33-36d", "Test book directory"), [[4, ""], [33, "d"], [34, "d"], [35, "d"], [36, "d"]], "Should return each page from 33 to 36 inclusive for deletion, plus page 4 for stitching.")
+	
 	# findCBZFile tests
 	
 	# Directory has no CBZ file

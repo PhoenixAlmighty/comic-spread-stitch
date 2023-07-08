@@ -237,7 +237,23 @@ def convertPageList(pageString, bookDir):
 			page = page[:-1]
 		else:
 			lastChar = ""
-		if not page.isdigit():
+		
+		if lastChar == "d":
+			# Check to see if it's a range
+			if "-" in page:
+				rangePages = page.split("-")
+				for rangePage in rangePages:
+					if not rangePage.isdigit():
+						print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.".format(bookDir))
+						return False
+				for i in range(int(rangePages[0]), int(rangePages[1]) + 1):
+					pageIntList.append([i, "d"])
+			elif page.isdigit():
+				pageIntList.append([int(page), lastChar])
+			else:
+				print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.".format(bookDir))
+				return False
+		elif not page.isdigit():
 			print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.".format(bookDir))
 			return False
 		else:
