@@ -83,6 +83,7 @@ def main():
 			
 			imgList = processPages(imgList, pages, manga)
 			
+			# this if statement may not be necessary given that processPages returns imgList
 			if not epub:
 				imgList = os.listdir()
 			os.chdir(bookDir)
