@@ -180,46 +180,46 @@ class TestComicSpreadStitch(unittest.TestCase):
 	def test_convertPageList_deletionRange(self):
 		self.assertEqual(comicSpreadStitch.convertPageList("4,33-36d", "Test book directory"), [[4, ""], [33, "d"], [34, "d"], [35, "d"], [36, "d"]], "Should return each page from 33 to 36 inclusive for deletion, plus page 4 for stitching.")
 	
-	# findCBZFile tests
+	# findBookFile tests
 	
 	# Directory has no CBZ file
-	def test_findCBZFile_noCBZ(self):
+	def test_findBookFile_noCBZ(self):
 		noCBZ = os.path.join(os.path.dirname(__file__), "test-resources", "no-cbz")
 		os.chdir(noCBZ)
-		self.assertEqual(comicSpreadStitch.findCBZFile(False), "", "{} should not have a CBZ file.".format(noCBZ))
+		self.assertEqual(comicSpreadStitch.findBookFile(False, False), "", "{} should not have a CBZ file.".format(noCBZ))
 		
 	# Directory has a CBZ_OLD file
-	def test_findCBZFile_CBZOLD(self):
+	def test_findBookFile_CBZOLD(self):
 		yesCBZOLD = os.path.join(os.path.dirname(__file__), "test-resources", "cbz-old")
 		os.chdir(yesCBZOLD)
 		capturedOutput = io.StringIO()
 		sys.stdout = capturedOutput
-		file = comicSpreadStitch.findCBZFile(False)
+		file = comicSpreadStitch.findBookFile(False, False)
 		sys.stdout = sys.__stdout__
 		self.assertFalse(file, "{} should have a CBZ_OLD file.".format(yesCBZOLD))
 		self.assertEqual(capturedOutput.getvalue(),
-			"{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after either deleting the CBZ_OLD file or adding \"backedup\" as a flag on the input.\n\n".format(yesCBZOLD),
+			"{} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the CBZ_OLD file or adding \"backedup\" as a flag on the input.\n\n".format(yesCBZOLD),
 			"Console output is incorrect.")
 		
 	# Directory has a CBZ file and no CBZ_OLD file
-	def test_findCBZFile_onlyCBZ(self):
+	def test_findBookFile_onlyCBZ(self):
 		correctFilesDir = os.path.join(os.path.dirname(__file__), "test-resources", "cbz")
 		os.chdir(correctFilesDir)
-		self.assertEqual(comicSpreadStitch.findCBZFile(False), "dummy.cbz", "{} should have a CBZ file but not a CBZ_OLD file.".format(correctFilesDir))
+		self.assertEqual(comicSpreadStitch.findBookFile(False, False), "dummy.cbz", "{} should have a CBZ file but not a CBZ_OLD file.".format(correctFilesDir))
 		
 	# Directory has a CBZ_OLD file, but backedup flag is set
-	def test_findCBZFile_backedupCBZOLD(self):
+	def test_findBookFile_backedupCBZOLD(self):
 		yesCBZOLD = os.path.join(os.path.dirname(__file__), "test-resources", "cbz-old")
 		os.chdir(yesCBZOLD)
-		self.assertEqual(comicSpreadStitch.findCBZFile(True), "dummy.cbz", "The CBZ_OLD file in {} should be ignored because the backedup flag is set.".format(yesCBZOLD))
+		self.assertEqual(comicSpreadStitch.findBookFile(True, False), "dummy.cbz", "The CBZ_OLD file in {} should be ignored because the backedup flag is set.".format(yesCBZOLD))
 		
 	# Directory has no CBZ_OLD file, but backedup flag is set
-	def test_findCBZFile_backedupCBZ(self):
+	def test_findBookFile_backedupCBZ(self):
 		correctFilesDir = os.path.join(os.path.dirname(__file__), "test-resources", "cbz")
 		os.chdir(correctFilesDir)
 		capturedOutput = io.StringIO()
 		sys.stdout = capturedOutput
-		file = comicSpreadStitch.findCBZFile(True)
+		file = comicSpreadStitch.findBookFile(True, False)
 		sys.stdout = sys.__stdout__
 		self.assertFalse(file, "{} should not have a CBZ_OLD file.".format(correctFilesDir))
 		self.assertEqual(capturedOutput.getvalue(),
@@ -230,23 +230,27 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# No flags
 	def test_getBookFlags_noFlags(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags([]), (False, False, False), "All flags should be false")
+		self.assertEqual(comicSpreadStitch.getBookFlags([]), (False, False, False, False), "All flags should be false")
 		
 	# Manga flag only
 	def test_getBookFlags_manga(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["manga"]), (True, False, False), "Manga flag should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["manga"]), (True, False, False, False), "Manga flag should be true")
 		
 	# Backedup flag only
 	def test_getBookFlags_backedup(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup"]), (False, True, False), "Backedup flag should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup"]), (False, True, False, False), "Backedup flag should be true")
+		
+	# Epub flag only
+	def test_getBookFlags_backedup(self):
+		self.assertEqual(comicSpreadStitch.getBookFlags(["epub"]), (False, False, True, False), "Backedup flag should be true")
 		
 	# Unknown flag only
 	def test_getBookFlags_unknown(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["blah"]), (False, False, True), "Unknown flag should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["blah"]), (False, False, False, True), "Unknown flag should be true")
 		
 	# Manga and backedup flags together
 	def test_getBookFlags_mangaAndBackedup(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup", "manga"]), (True, True, False), "Manga and backedup flags should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup", "manga"]), (True, True, False, False), "Manga and backedup flags should be true")
 	
 	# processPages tests
 	# The images used here are from https://github.com/mohammadimtiazz/standard-test-images-for-Image-Processing

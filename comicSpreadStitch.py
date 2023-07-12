@@ -2,6 +2,7 @@ import cv2
 from zipfile import ZipFile
 import os
 import shutil
+import epubToCbz
 
 tempPath = "temp"
 
@@ -23,7 +24,7 @@ def main():
 				print("The line for {} is missing page numbers.".format(bookDir.strip()))
 				skipped += 1
 				continue
-			manga, backedup, unknownFlag = getBookFlags(parts[2:])
+			manga, backedup, epub, unknownFlag = getBookFlags(parts[2:])
 			if unknownFlag:
 				print("Unknown flag detected for {}. Skipping.".format(bookDir))
 				skipped += 1
@@ -40,9 +41,9 @@ def main():
 			
 			os.chdir(bookDir)
 			
-			bookFileName = findCBZFile(backedup)
+			bookFileName = findBookFile(backedup, epub)
 			if bookFileName == "":
-				print("{} has no CBZ files in it. Check your input.".format(bookDir))
+				print("{} has no {} files in it. Check your input.".format(bookDir, "ePub" if epub else "CBZ"))
 			if not bookFileName:
 				skipped += 1
 				continue
@@ -51,39 +52,53 @@ def main():
 				zip.extractall(path = tempPath)
 			
 			os.chdir(tempPath)
-			imgList = os.listdir()
-			# check to see if the image files are in a subdirectory and bring them out if so
-			while os.path.isdir(imgList[0]):
-				for file in os.listdir(imgList[0]):
-					shutil.move(os.path.join(imgList[0], file), file)
-				os.rmdir(imgList[0])
-				imgList = os.listdir()
+			
+			imgList = []
+			if not epub:
+				imgList = getCbzImgs()
+			else:
+				docDir, opfFile = epubToCbz.findOpfEnterDoc()
+				if not opfFile:
+					skipped += 1
+					print("Skipping {}.".format(bookFileName))
+					continue
+				manifest, spine = epubToCbz.getManifestAndSpine(opfFile)
+				imgList = epubToCbz.getImageFilenames(manifest, spine)
+			
+			# imgList = os.listdir()
+			# # check to see if the image files are in a subdirectory and bring them out if so
+			# while os.path.isdir(imgList[0]):
+				# for file in os.listdir(imgList[0]):
+					# shutil.move(os.path.join(imgList[0], file), file)
+				# os.rmdir(imgList[0])
+				# imgList = os.listdir()
 			
 			# check whether imgList is long enough to account for all of pages
 			if (pages[-1][1] in ["l", "r", "d"] and len(imgList) < pages[-1][0]) or (not (pages[-1][1] in ["l", "r", "d"]) and len(imgList) < pages[-1][0] + 1):
 				print("{} skipped because the last page to process is past the end of the book.".format(bookDir))
 				skipped += 1
-				for file in imgList:
-					os.remove(file)
-				os.chdir("..")
-				os.rmdir(tempPath)
+				os.chdir(bookDir)
+				shutil.rmtree(tempPath)
 				continue
 			
-			processPages(imgList, pages, manga)
+			imgList = processPages(imgList, pages, manga)
 			
-			imgList = os.listdir()
-			os.chdir("..")
-			if not backedup:
+			if not epub:
+				imgList = os.listdir()
+			os.chdir(bookDir)
+			if not backedup and not epub:
 				os.rename(bookFileName, bookFileName + "_old")
 			
 			# create new CBZ file with the combined pages
-			with ZipFile(bookFileName, 'w') as newZip:
-				for file in imgList:
-					filePath = os.path.join(tempPath, file)
-					newZip.write(filePath, arcname = file)
-					os.remove(filePath)
+			if epub:
+				epubToCbz.buildCbzFile(imgList, os.path.join(tempPath, docDir), bookFileName[:-4] + "cbz")
+			else:
+				with ZipFile(bookFileName, 'w') as newZip:
+					for file in imgList:
+						filePath = os.path.join(tempPath, file)
+						newZip.write(filePath, arcname = file)
 			
-			os.rmdir(tempPath)
+			shutil.rmtree(tempPath)
 			
 			printSuccess(bookFileName, pages)
 			processed += 1
@@ -146,6 +161,14 @@ def processPages(imgList, pageList, manga):
 			# unless I'm combining the front and back covers, in which case the front cover gets to stay as it is
 			if not page[0] == 0:
 				os.remove(imgList[page[0]])
+	
+	for page in reversed(pageList):
+		if page[1] == "d":
+			del imgList[page[0] - 1]
+		elif page[1] in ["", "m", "s"] and not page[0] == 0:
+			del imgList[page[0]]
+	
+	return imgList
 
 def printSuccess(bookFileName, pagesList):
 	pagesString = ""
@@ -263,22 +286,30 @@ def convertPageList(pageString, bookDir):
 	
 	return pageIntList
 
-def findCBZFile(backedup):
+def findBookFile(backedup, epub):
 	bookFiles = os.listdir()
 	bookFileName = ""
 	backupFound = False
+	ext = ""
+	backupExt = ""
+	if epub:
+		ext = ".epub"
+		backupExt = ".epub_old"
+	else:
+		ext = ".cbz"
+		backupExt = ".cbz_old"
 	for file in bookFiles:
 		filename, extension = os.path.splitext(file)
 		if not backedup:
-			if extension == ".cbz":
+			if extension == ext:
 				bookFileName = file
-			if extension == ".cbz_old":
-				print("{} contains a CBZ_OLD file like the ones this script leaves behind as backups. As such, this book will be skipped. Try again after either deleting the CBZ_OLD file or adding \"backedup\" as a flag on the input.\n".format(os.getcwd()))
+			if extension == backupExt:
+				print("{} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the {}_OLD file or adding \"backedup\" as a flag on the input.\n".format(os.getcwd(), "EPUB" if epub else "CBZ"))
 				return False
 		else:
-			if extension == ".cbz":
+			if extension == ext:
 				bookFileName = file
-			if extension == ".cbz_old":
+			if extension == backupExt:
 				backupFound = True
 	
 	if backedup and not backupFound:
@@ -290,6 +321,7 @@ def findCBZFile(backedup):
 def getBookFlags(flags):
 	manga = False
 	backedup = False
+	epub = False
 	unknownFlag = False
 	# Parse book flags
 	for flag in flags:
@@ -298,9 +330,23 @@ def getBookFlags(flags):
 			manga = True
 		elif flag == "backedup":
 			backedup = True
+		elif flag == "epub":
+			epub = True
 		else:
 			unknownFlag = True
-	return manga, backedup, unknownFlag
+	return manga, backedup, epub, unknownFlag
+
+def getCbzImgs():
+	imgList = os.listdir()
+	
+	# check to see if the image files are in a subdirectory and bring them out if so
+	while os.path.isdir(imgList[0]):
+		for file in os.listdir(imgList[0]):
+			shutil.move(os.path.join(imgList[0], file), file)
+		os.rmdir(imgList[0])
+		imgList = os.listdir()
+	
+	return imgList
 
 if __name__ == "__main__":
 	main()
