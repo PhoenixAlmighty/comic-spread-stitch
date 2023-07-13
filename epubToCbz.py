@@ -122,7 +122,10 @@ def buildCbzFile(imgs, docPath, cbzFileName):
 
 def getHtmlAttributeValue(tag, attr):
 	firstQuoteIndex = tag.find("\"", tag.find(attr))
-	return tag[firstQuoteIndex + 1 : tag.find("\"", firstQuoteIndex + 1)]
+	if firstQuoteIndex != -1:
+		return tag[firstQuoteIndex + 1 : tag.find("\"", firstQuoteIndex + 1)]
+	firstQuoteIndex = tag.find("\'", tag.find(attr))
+	return tag[firstQuoteIndex + 1 : tag.find("\'", firstQuoteIndex + 1)]
 
 def findOpfEnterDoc():
 	# check whether OPF file is in the top-level directory

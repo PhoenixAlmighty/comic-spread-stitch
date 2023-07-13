@@ -20,11 +20,27 @@ def main():
 			bookDir = ""
 			parts = line.split("|")
 			bookDir = parts[0]
-			if (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2:
+			manga, backedup, epub, unknownFlag = getBookFlags(parts[2:])
+			pageNumbersNotPresent = (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2
+			
+			os.chdir(bookDir)
+			
+			bookFileName = findBookFile(backedup, epub)
+			if bookFileName == "":
+				print("{} has no {} files in it. Check your input.".format(bookDir, "ePub" if epub else "CBZ"))
+			if not bookFileName:
+				skipped += 1
+				continue
+			
+			if pageNumbersNotPresent and epub:
+				epubToCbz.convertEpubToCbz(os.path.join(bookDir, bookFileName))
+				processed += 1
+				continue
+			
+			if pageNumbersNotPresent:
 				print("The line for {} is missing page numbers.".format(bookDir.strip()))
 				skipped += 1
 				continue
-			manga, backedup, epub, unknownFlag = getBookFlags(parts[2:])
 			if unknownFlag:
 				print("Unknown flag detected for {}. Skipping.".format(bookDir))
 				skipped += 1
@@ -36,15 +52,6 @@ def main():
 				continue
 			pages = convertPageList(parts[1], bookDir)
 			if not pages:
-				skipped += 1
-				continue
-			
-			os.chdir(bookDir)
-			
-			bookFileName = findBookFile(backedup, epub)
-			if bookFileName == "":
-				print("{} has no {} files in it. Check your input.".format(bookDir, "ePub" if epub else "CBZ"))
-			if not bookFileName:
 				skipped += 1
 				continue
 			
