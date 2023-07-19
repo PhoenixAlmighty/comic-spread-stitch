@@ -27,7 +27,7 @@ def convertEpubToCbz(book):
 		zip.extractall(path = tempPath)
 	
 	os.chdir(tempPath)
-	docDir, opfFile = findOpfEnterDoc()
+	docDir, opfFile = findOpfEnterDoc(bookDir, tempPath)
 	if not opfFile:
 		return
 	
@@ -127,7 +127,7 @@ def getHtmlAttributeValue(tag, attr):
 	firstQuoteIndex = tag.find("\'", tag.find(attr))
 	return tag[firstQuoteIndex + 1 : tag.find("\'", firstQuoteIndex + 1)]
 
-def findOpfEnterDoc():
+def findOpfEnterDoc(bookDir, tempPath):
 	# check whether OPF file is in the top-level directory
 	docDir = ""
 	opfFile = findOpfFile()

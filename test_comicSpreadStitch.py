@@ -226,6 +226,8 @@ class TestComicSpreadStitch(unittest.TestCase):
 			"{} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n\n".format(correctFilesDir),
 			"Console output is incorrect.")
 	
+	# should have tests for when epub is true, but I can do that later
+	
 	# getBookFlags tests
 	
 	# No flags
