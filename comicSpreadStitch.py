@@ -20,7 +20,7 @@ def main():
 			bookDir = ""
 			parts = line.split("|")
 			bookDir = parts[0]
-			manga, backedup, epub, unknownFlag = getBookFlags(parts[2:])
+			manga, backedup, epub, rightlines, unknownFlag = getBookFlags(parts[2:])
 			pageNumbersNotPresent = (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2
 			
 			os.chdir(bookDir)
@@ -87,6 +87,9 @@ def main():
 				os.chdir(bookDir)
 				shutil.rmtree(tempPath)
 				continue
+			
+			if rightlines:
+				removeRightLines(imgList)
 			
 			imgList = processPages(imgList, pages, manga)
 			
@@ -330,6 +333,7 @@ def getBookFlags(flags):
 	manga = False
 	backedup = False
 	epub = False
+	rightlines = False
 	unknownFlag = False
 	# Parse book flags
 	for flag in flags:
@@ -340,9 +344,11 @@ def getBookFlags(flags):
 			backedup = True
 		elif flag == "epub":
 			epub = True
+		elif flag == "rightlines":
+			rightlines = True
 		else:
 			unknownFlag = True
-	return manga, backedup, epub, unknownFlag
+	return manga, backedup, epub, rightlines, unknownFlag
 
 def getCbzImgs():
 	imgList = os.listdir()
@@ -355,6 +361,12 @@ def getCbzImgs():
 		imgList = os.listdir()
 	
 	return imgList
+
+def removeRightLines(imgList):
+	for img in imgList:
+		page = cv2.imread(img)
+		page = page[:, :-1]
+		cv2.imwrite(img, page)
 
 if __name__ == "__main__":
 	main()

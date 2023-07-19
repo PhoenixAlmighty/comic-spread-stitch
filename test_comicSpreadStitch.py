@@ -232,27 +232,31 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# No flags
 	def test_getBookFlags_noFlags(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags([]), (False, False, False, False), "All flags should be false")
+		self.assertEqual(comicSpreadStitch.getBookFlags([]), (False, False, False, False, False), "All flags should be false")
 		
 	# Manga flag only
 	def test_getBookFlags_manga(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["manga"]), (True, False, False, False), "Manga flag should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["manga"]), (True, False, False, False, False), "Manga flag should be true")
 		
 	# Backedup flag only
 	def test_getBookFlags_backedup(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup"]), (False, True, False, False), "Backedup flag should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup"]), (False, True, False, False, False), "Backedup flag should be true")
 		
 	# Epub flag only
-	def test_getBookFlags_backedup(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["epub"]), (False, False, True, False), "Backedup flag should be true")
+	def test_getBookFlags_epub(self):
+		self.assertEqual(comicSpreadStitch.getBookFlags(["epub"]), (False, False, True, False, False), "Epub flag should be true")
+		
+	# Epub flag only
+	def test_getBookFlags_rightlines(self):
+		self.assertEqual(comicSpreadStitch.getBookFlags(["rightlines"]), (False, False, False, True, False), "Rightlines flag should be true")
 		
 	# Unknown flag only
 	def test_getBookFlags_unknown(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["blah"]), (False, False, False, True), "Unknown flag should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["blah"]), (False, False, False, False, True), "Unknown flag should be true")
 		
 	# Manga and backedup flags together
 	def test_getBookFlags_mangaAndBackedup(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup", "manga"]), (True, True, False, False), "Manga and backedup flags should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup", "manga"]), (True, True, False, False, False), "Manga and backedup flags should be true")
 	
 	# processPages tests
 	# The images used here are from https://github.com/mohammadimtiazz/standard-test-images-for-Image-Processing
