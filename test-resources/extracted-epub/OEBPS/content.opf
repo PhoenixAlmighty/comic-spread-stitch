@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="BookId">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:title>Witchblade: Demon #1</dc:title>
+    <dc:creator opf:role="aut">Mark Millar, Jae Lee, Jose Villarrubia, June Chung</dc:creator>
+    <dc:language>en-US</dc:language>
+    <dc:rights>All Rights Reserved.</dc:rights>
+    <dc:publisher>Dynamite Entertainment</dc:publisher>
+    <dc:identifier id="BookId">urn:uuid:http://www.dynamite.com</dc:identifier>
+    <meta name="cover" content="cover-image"/>
+  </metadata>
+  <manifest>
+    <item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>
+    <item id="cover-image" href="images/cover.jpg" media-type="image/jpeg"/>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="style" href="stylesheet.css" media-type="text/css"/>
+    <item id="pagetemplate" href="page-template.xpgt" media-type="application/vnd.adobe-page-template+xml"/>
+    <item id="page_002" href="p002.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_002" href="images/i002.jpg" media-type="image/jpeg"/>
+    <item id="page_003" href="p003.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_003" href="images/i003.jpg" media-type="image/jpeg"/>
+    <item id="page_004" href="p004.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_004" href="images/i004.jpg" media-type="image/jpeg"/>
+    <item id="page_005" href="p005.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_005" href="images/i005.jpg" media-type="image/jpeg"/>
+    <item id="page_006" href="p006.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_006" href="images/i006.jpg" media-type="image/jpeg"/>
+    <item id="page_007" href="p007.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_007" href="images/i007.jpg" media-type="image/jpeg"/>
+    <item id="page_008" href="p008.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_008" href="images/i008.jpg" media-type="image/jpeg"/>
+    <item id="page_009" href="p009.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_009" href="images/i009.jpg" media-type="image/jpeg"/>
+    <item id="page_010" href="p010.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_010" href="images/i010.jpg" media-type="image/jpeg"/>
+    <item id="page_011" href="p011.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_011" href="images/i011.jpg" media-type="image/jpeg"/>
+    <item id="page_012" href="p012.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_012" href="images/i012.jpg" media-type="image/jpeg"/>
+    <item id="page_013" href="p013.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_013" href="images/i013.jpg" media-type="image/jpeg"/>
+    <item id="page_014" href="p014.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_014" href="images/i014.jpg" media-type="image/jpeg"/>
+    <item id="page_015" href="p015.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_015" href="images/i015.jpg" media-type="image/jpeg"/>
+    <item id="page_016" href="p016.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_016" href="images/i016.jpg" media-type="image/jpeg"/>
+    <item id="page_017" href="p017.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_017" href="images/i017.jpg" media-type="image/jpeg"/>
+    <item id="page_018" href="p018.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image_018" href="images/i018.jpg" media-type="image/jpeg"/>
+   </manifest>
+   <spine toc="ncx">
+    <itemref idref="cover"/>
+    <itemref idref="page_002" />
+    <itemref idref="page_003" />
+    <itemref idref="page_004" />
+    <itemref idref="page_005" />
+    <itemref idref="page_006" />
+    <itemref idref="page_007" />
+    <itemref idref="page_008" />
+    <itemref idref="page_009" />
+    <itemref idref="page_010" />
+    <itemref idref="page_011" />
+    <itemref idref="page_012" />
+    <itemref idref="page_013" />
+    <itemref idref="page_014" />
+    <itemref idref="page_015" />
+    <itemref idref="page_016" />
+    <itemref idref="page_017" />
+    <itemref idref="page_018"/>
+  </spine>
+  <guide>
+    <reference href="cover.xhtml" type="cover" title="Cover"/>
+    <reference type="text" href="p003.xhtml"/>
+  </guide>
+</package>
