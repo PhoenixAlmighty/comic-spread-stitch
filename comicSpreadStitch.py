@@ -64,7 +64,7 @@ def main():
 			if not epub:
 				imgList = getCbzImgs()
 			else:
-				docDir, opfFile = epubToCbz.findOpfEnterDoc()
+				docDir, opfFile = epubToCbz.findOpfEnterDoc(bookDir, tempPath)
 				if not opfFile:
 					skipped += 1
 					print("Skipping {}.".format(bookFileName))
