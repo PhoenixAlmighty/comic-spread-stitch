@@ -574,6 +574,20 @@ class TestComicSpreadStitch(unittest.TestCase):
 		
 		# Check directory state
 		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
+	
+	# stitchPages tests
+	
+	# Sanity with baboon.png
+	def test_stitchPages_baboonSanity(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		baboon = cv2.imread("baboon.png")
+		left = cv2.imread("leftbaboon.png")
+		right = cv2.imread("rightbaboon.png")
+		
+		combImg = comicSpreadStitch.stitchPages(left, right)
+		
+		self.assertTrue(combImg.shape == baboon.shape and not(np.bitwise_xor(combImg, baboon).any()), "Output image is incorrect")
 
 if __name__ == "__main__":
 	unittest.main()

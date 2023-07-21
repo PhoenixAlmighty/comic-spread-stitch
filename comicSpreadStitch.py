@@ -2,6 +2,7 @@ import cv2
 from zipfile import ZipFile
 import os
 import shutil
+import numpy as np
 import epubToCbz
 
 tempPath = "temp"
@@ -182,44 +183,16 @@ def processPages(imgList, pageList, manga):
 	
 	return imgList
 
-# Note: the below function did not stitch any images together when applied to Big Girls, Vol. 1; it just concatenated all of them
-# TODO: update stitchPages to work with the new pageList format and the modifiers
+# Note: the below function did not stitch together leftbaboon.png and rightbaboon.png, just concatenated them
+# This may be because of compression artifacts? I'm not sure
 
-def stitchPages(stitcher, imgList, pageList, manga):
-	stitchedPages = []
-	concatPages = []
-	for page in pageList:
-		# read in the two pages I want to combine
-		# this is page - 1 and page because python lists are 0-indexed and the page numbers are 1-indexed
-		# print("{}, {}".format(page - 1, page))
-		img1 = cv2.imread(imgList[page - 1])
-		img2 = cv2.imread(imgList[page])
-		
-		#attempt to stitch the images
-		if manga:
-			(status, stitched) = stitcher.stitch([img2, img1])
-		else:
-			(status, stitched) = stitcher.stitch([img2, img1])
-		
-		# horizontally concatenate the two pages if stitching didn't work
-		if status != 0:
-			concatPages.append([page, status])
-			if manga:
-				stitched = cv2.hconcat([img2, img1])
-			else:
-				stitched = cv2.hconcat([img1, img2])
-		else:
-			stitchedPages.append(page)
-		
-		# overwrite the first page with the combined pages
-		cv2.imwrite(imgList[page - 1], stitched)
-		
-		# remove the second page so I don't see it again separately from the combined pages
-		# unless I'm combining the front and back covers, in which case the front cover gets to stay as it is
-		if not page == 0:
-			os.remove(imgList[page])
-	
-	print("Stitched on pages {}, concatenated on pages {}".format(stitchedPages, concatPages))
+def stitchPages(leftImg, rightImg):
+	for i in range(-1, -51, -1):
+		if not np.bitwise_xor(leftImg[:, i], rightImg[:, 0]).any():
+			return cv2.hconcat([leftImg[:, :i], rightImg])
+			break
+	else:
+		return cv2.hconcat([leftImg, rightImg])
 
 def printSuccess(bookFileName, pagesList):
 	pagesString = ""
