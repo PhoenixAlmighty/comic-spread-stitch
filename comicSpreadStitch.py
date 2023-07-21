@@ -4,12 +4,15 @@ import os
 import shutil
 import numpy as np
 import epubToCbz
+import argparse
 
 tempPath = "temp"
 
 def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--overlap", type=int, default=50, help="number of columns to check for overlap")
+	args = parser.parse_args()
 	lines = []
-	stitcher = cv2.Stitcher_create()
 	processed = 0
 	skipped = 0
 	errors = 0
@@ -93,7 +96,7 @@ def main():
 			if rightlines:
 				removeRightLines(imgList)
 			
-			imgList = processPages(imgList, pages, manga)
+			imgList = processPages(imgList, pages, manga, args.overlap)
 			
 			# this if statement may not be necessary given that processPages returns imgList
 			if not epub:
@@ -124,7 +127,7 @@ def main():
 	
 	print("{} books processed, {} skipped, and {} errors. See output above for results.\n".format(processed, skipped, errors))
 
-def processPages(imgList, pageList, manga):
+def processPages(imgList, pageList, manga, columns):
 	for page in pageList:
 		# delete page
 		if page[1] == "d":
@@ -155,9 +158,11 @@ def processPages(imgList, pageList, manga):
 			
 			# horizontally concatenate the two pages
 			if manga:
-				combImg = cv2.hconcat([img2, img1])
+				# combImg = cv2.hconcat([img2, img1])
+				combImg = stitchPages(img2, img1, columns)
 			else:
-				combImg = cv2.hconcat([img1, img2])
+				# combImg = cv2.hconcat([img1, img2])
+				combImg = stitchPages(img1, img2, columns)
 			
 			# rotate if needed
 			if page[1] == "m":
@@ -183,16 +188,17 @@ def processPages(imgList, pageList, manga):
 	
 	return imgList
 
-# Note: the below function did not stitch together leftbaboon.png and rightbaboon.png, just concatenated them
-# This may be because of compression artifacts? I'm not sure
-
-def stitchPages(leftImg, rightImg):
-	for i in range(-1, -51, -1):
-		if not np.bitwise_xor(leftImg[:, i], rightImg[:, 0]).any():
-			return cv2.hconcat([leftImg[:, :i], rightImg])
-			break
-	else:
+def stitchPages(leftImg, rightImg, columns):
+	if columns == 0:
 		return cv2.hconcat([leftImg, rightImg])
+	else:
+		columns = (columns * -1) - 1
+		for i in range(-1, columns, -1):
+			if not np.bitwise_xor(leftImg[:, i], rightImg[:, 0]).any():
+				return cv2.hconcat([leftImg[:, :i], rightImg])
+				break
+		else:
+			return cv2.hconcat([leftImg, rightImg])
 
 def printSuccess(bookFileName, pagesList):
 	pagesString = ""

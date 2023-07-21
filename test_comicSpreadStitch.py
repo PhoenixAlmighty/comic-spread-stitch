@@ -269,7 +269,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], False)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], False, 50)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match baboonboat.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -295,7 +295,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], False)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], False, 50)
 		
 		# By this point, baboon.png should still exist and boat.png should match boatbaboon.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -320,7 +320,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		testImg = cv2.imread("babooncw.png")
 		baboon = cv2.imread("baboon.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], False)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], False, 50)
 		
 		# By this point, baboon.png should match babooncw.png
 		processedImg = cv2.imread("baboon.png")
@@ -339,7 +339,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], False)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], False, 50)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match baboonboatcw.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -364,7 +364,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		testImg = cv2.imread("baboonccw.png")
 		baboon = cv2.imread("baboon.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], False)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], False, 50)
 		
 		# By this point, baboon.png should match baboonccw.png
 		processedImg = cv2.imread("baboon.png")
@@ -383,7 +383,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], False)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], False, 50)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match baboonboatccw.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -407,7 +407,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		os.chdir(testImgDir)
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], False)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], False, 50)
 		
 		# By this point, boat.png should no longer exist; nothing else should be changed
 		imgs = os.listdir()
@@ -426,7 +426,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], True)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], True, 50)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match boatbaboon.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -452,7 +452,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], True)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], True, 50)
 		
 		# By this point, baboon.png should still exist and boat.png should match baboonboat.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -477,7 +477,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		testImg = cv2.imread("babooncw.png")
 		baboon = cv2.imread("baboon.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], True)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], True, 50)
 		
 		# By this point, baboon.png should match babooncw.png
 		processedImg = cv2.imread("baboon.png")
@@ -496,7 +496,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], True)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], True, 50)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match boatbabooncw.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -521,7 +521,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		testImg = cv2.imread("baboonccw.png")
 		baboon = cv2.imread("baboon.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], True)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], True, 50)
 		
 		# By this point, baboon.png should match baboonccw.png
 		processedImg = cv2.imread("baboon.png")
@@ -540,7 +540,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], True)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], True, 50)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match boatbaboonccw.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -564,7 +564,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		os.chdir(testImgDir)
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], True)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], True, 50)
 		
 		# By this point, boat.png should no longer exist; nothing else should be changed
 		imgs = os.listdir()
@@ -585,7 +585,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		left = cv2.imread("leftbaboon.png")
 		right = cv2.imread("rightbaboon.png")
 		
-		combImg = comicSpreadStitch.stitchPages(left, right)
+		combImg = comicSpreadStitch.stitchPages(left, right, 50)
 		
 		self.assertTrue(combImg.shape == baboon.shape and not(np.bitwise_xor(combImg, baboon).any()), "Output image is incorrect")
 
