@@ -5,6 +5,7 @@ import shutil
 import numpy as np
 import epubToCbz
 import argparse
+import traceback
 
 tempPath = "temp"
 
@@ -121,9 +122,9 @@ def main():
 		except Exception as err:
 			errors += 1
 			if bookDir == "":
-				print("Error occurred before book directory could be read in. Error message:\n", err)
+				print("Error occurred before book directory could be read in.\n", traceback.format_exc())
 			else:
-				print("Error occurred while processing {}. Error message:\n".format(bookDir),err)
+				print("Error occurred while processing {}.\n".format(bookDir), traceback.format_exc())
 	
 	print("{} books processed, {} skipped, and {} errors. See output above for results.\n".format(processed, skipped, errors))
 
