@@ -11,7 +11,8 @@ tempPath = "temp"
 
 def main():
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--overlap", type=int, default=50, help="number of columns to check for overlap")
+	parser.add_argument("-o", "--overlap", type = int, default = 50, help = "number of columns to check for overlap")
+	parser.add_argument("-c", "--compression", type = int, default = 32, help = "fuzz factor for compression artifacts")
 	args = parser.parse_args()
 	lines = []
 	processed = 0
@@ -97,7 +98,7 @@ def main():
 			if rightlines:
 				removeRightLines(imgList)
 			
-			imgList = processPages(imgList, pages, manga, args.overlap)
+			imgList = processPages(imgList, pages, manga, args.overlap, args.compression)
 			
 			# this if statement may not be necessary given that processPages returns imgList
 			if not epub:
@@ -128,7 +129,7 @@ def main():
 	
 	print("{} books processed, {} skipped, and {} errors. See output above for results.\n".format(processed, skipped, errors))
 
-def processPages(imgList, pageList, manga, columns):
+def processPages(imgList, pageList, manga, columns, compresionFuzz):
 	for page in pageList:
 		# delete page
 		if page[1] == "d":
@@ -160,10 +161,10 @@ def processPages(imgList, pageList, manga, columns):
 			# horizontally concatenate the two pages
 			if manga:
 				# combImg = cv2.hconcat([img2, img1])
-				combImg = stitchPages(img2, img1, columns)
+				combImg = stitchPages(img2, img1, columns, compressionFuzz)
 			else:
 				# combImg = cv2.hconcat([img1, img2])
-				combImg = stitchPages(img1, img2, columns)
+				combImg = stitchPages(img1, img2, columns, compressionFuzz)
 			
 			# rotate if needed
 			if page[1] == "m":
@@ -189,15 +190,15 @@ def processPages(imgList, pageList, manga, columns):
 	
 	return imgList
 
-def stitchPages(leftImg, rightImg, columns):
+def stitchPages(leftImg, rightImg, columns, compressionFuzz):
 	if columns == 0:
 		return cv2.hconcat([leftImg, rightImg])
 	else:
 		columns = (columns * -1) - 1
 		for i in range(-1, columns, -1):
-			# fuzz factor for compression artifacts (would require compressionFuzz to be defined; 32 might be a good starting point):
-			# if np.abs(leftImg[:, i].astype(np.int16) - rightImg[:, 0].astype(np.int16)).max() < compressionFuzz:
-			if not np.bitwise_xor(leftImg[:, i], rightImg[:, 0]).any():
+			# account for fuzz factor for compression artifacts
+			# cast ndarrays as int16 because they're uint8 by default, which leads to wrong values when I should get negative ones
+			if np.abs(leftImg[:, i].astype(np.int16) - rightImg[:, 0].astype(np.int16)).max() < compressionFuzz:
 				return cv2.hconcat([leftImg[:, :i], rightImg])
 				break
 		else:
@@ -394,6 +395,9 @@ if __name__ == "__main__":
 	main()
 	
 # some lines of code that might be useful for debugging at some point
+
+# can replace if statement starting with np.abs in stitchPages if I want no differences in that column:
+			# if not np.bitwise_xor(leftImg[:, i], rightImg[:, 0]).any():
 
 # print(os.getcwd())
 
