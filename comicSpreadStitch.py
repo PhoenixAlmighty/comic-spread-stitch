@@ -196,7 +196,7 @@ def stitchPages(leftImg, rightImg, columns):
 		columns = (columns * -1) - 1
 		for i in range(-1, columns, -1):
 			# fuzz factor for compression artifacts (would require compressionFuzz to be defined; 32 might be a good starting point):
-			# if np.abs(leftImg[:, i].astype(np.int16) - rightImg[:, 0].astype(np.int16)).max < compressionFuzz:
+			# if np.abs(leftImg[:, i].astype(np.int16) - rightImg[:, 0].astype(np.int16)).max() < compressionFuzz:
 			if not np.bitwise_xor(leftImg[:, i], rightImg[:, 0]).any():
 				return cv2.hconcat([leftImg[:, :i], rightImg])
 				break
