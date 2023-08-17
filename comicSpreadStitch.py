@@ -129,7 +129,7 @@ def main():
 	
 	print("{} books processed, {} skipped, and {} errors. See output above for results.\n".format(processed, skipped, errors))
 
-def processPages(imgList, pageList, manga, columns, compresionFuzz):
+def processPages(imgList, pageList, manga, columns, compressionFuzz):
 	for page in pageList:
 		# delete page
 		if page[1] == "d":
