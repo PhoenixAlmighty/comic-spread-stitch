@@ -27,6 +27,10 @@ def convertPdfToCbz(book):
 	reader = PdfReader(bookPdf)
 	count = 0
 	numDigits = math.ceil(math.log(len(reader.pages), 10))
+	try:
+		os.mkdir(tempPath)
+	except FileExistsError as err:
+		print(tempPath + " directory already exists")
 	
 	for page in reader.pages:
 		for image_file_object in page.images:
