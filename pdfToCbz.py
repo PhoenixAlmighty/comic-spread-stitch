@@ -30,7 +30,7 @@ def convertPdfToCbz(book):
 	
 	for page in reader.pages:
 		for image_file_object in page.images:
-			with open(os.path.join(tempPath, ("{:0" + str(numDigits) + "d}").format(count) + os.path.splitext(image_file_object.name)[1]), wb) as fp:
+			with open(os.path.join(tempPath, ("{:0" + str(numDigits) + "d}").format(count) + os.path.splitext(image_file_object.name)[1]), "wb") as fp:
 				fp.write(image_file_object.data)
 				count += 1
 
