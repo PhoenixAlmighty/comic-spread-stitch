@@ -73,7 +73,7 @@ def findOpfFile():
 # could be changed to return more info if more is needed in the future
 def getManifestAndSpine(opfFile):
 	lines = []
-	with open(opfFile, "r") as opf:
+	with open(opfFile, "r", encoding='utf-8') as opf:
 		lines = opf.readlines()
 	
 	manifest = {}

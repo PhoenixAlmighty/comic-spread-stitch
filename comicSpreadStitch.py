@@ -12,7 +12,7 @@ tempPath = "temp"
 def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-o", "--overlap", type = int, default = 50, help = "number of columns to check for overlap")
-	parser.add_argument("-c", "--compression", type = int, default = 32, help = "fuzz factor for compression artifacts")
+	parser.add_argument("-c", "--compression", type = int, default = 50, help = "fuzz factor for compression artifacts")
 	args = parser.parse_args()
 	lines = []
 	processed = 0
