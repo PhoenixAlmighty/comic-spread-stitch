@@ -27,8 +27,13 @@ def main():
 			bookDir = ""
 			parts = line.split("|")
 			bookDir = parts[0]
-			manga, backedup, epub, rightlines, unknownFlag = getBookFlags(parts[2:])
+			manga, backedup, epub, pdf, rightlines, unknownFlag = getBookFlags(parts[2:])
 			pageNumbersNotPresent = (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2
+			
+			if pdf:
+				print("{} skipped because PDF input is not yet supported.".format(bookDir))
+				skipped += 1
+				continue
 			
 			os.chdir(bookDir)
 			
@@ -356,6 +361,7 @@ def getBookFlags(flags):
 	manga = False
 	backedup = False
 	epub = False
+	pdf = False
 	rightlines = False
 	unknownFlag = False
 	# Parse book flags
@@ -367,11 +373,13 @@ def getBookFlags(flags):
 			backedup = True
 		elif flag == "epub":
 			epub = True
+		elif flag == "pdf":
+			pdf = True
 		elif flag == "rightlines":
 			rightlines = True
 		else:
 			unknownFlag = True
-	return manga, backedup, epub, rightlines, unknownFlag
+	return manga, backedup, epub, pdf, rightlines, unknownFlag
 
 def getCbzImgs():
 	imgList = os.listdir()
