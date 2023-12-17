@@ -15,7 +15,7 @@ def main():
 	args = parser.parse_args()
 	convertPdfToCbz(args.book)
 
-# currently only extracts images from the PDF and puts them in the temp path
+# As PDFs are black magic, this may not get the desired result
 def convertPdfToCbz(book):
 	[root, ext] = os.path.splitext(book)
 	if ext.lower() != ".pdf":
