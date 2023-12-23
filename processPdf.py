@@ -36,7 +36,9 @@ def processPdf(book, pageList, manga):
 		elif i in pagesList:
 			p = pagesList.index(i)
 			prevOp = opsList[p]
-			currOp = opsList[p + 1]
+			# if statement necessary in case i is the last page of the source PDF
+			if p + 1 < len(opsList):
+				currOp = opsList[p + 1]
 			if prevOp in ['d', 'l', 'r']:
 				if i + 1 not in pagesList:
 					writer.add_page(reader.pages[i])
