@@ -2,6 +2,7 @@ from pypdf import PdfReader, PdfWriter, Transformation
 from pypdf.generic import RectangleObject
 import argparse
 import ast
+import os
 
 def main():
 	# parse arguments
@@ -9,11 +10,12 @@ def main():
 	parser.add_argument("book", help = "The absolute file path of the PDF you want to process")
 	parser.add_argument("pageList", help = "The list of pages you want to process and what you want to do with them; should look like a Python list")
 	parser.add_argument("-m", "--manga", dest = "manga", action = "store_true", help = "Add this switch if the book is read from right to left")
+	parser.add_argument("-b", "--backedup", dest = "backedup", action = "store_true", help = "Add this switch if the book already has a backup")
 	args = parser.parse_args()
 	pageList = ast.literal_eval(args.pageList)
-	processPdf(args.book, pageList, args.manga)
+	processPdf(args.book, pageList, args.manga, args.backedup)
 
-def processPdf(book, pageList, manga):
+def processPdf(book, pageList, manga, backedup):
 	# read source PDF
 	reader = PdfReader(book)
 	
@@ -51,8 +53,12 @@ def processPdf(book, pageList, manga):
 			p = pagesList.index(i + 1)
 			processPage(reader, writer, i, opsList[p], manga)
 	
+	# rename old file
+	if not backedup:
+		os.rename(book, book + "_old")
+	
 	# write file
-	with open("C:\\Users\\rmauz\\Desktop\\comic-spread-stitch\\test-resources\\pdf\\test.pdf", "wb") as fp:
+	with open(book, "wb") as fp:
 		writer.write(fp)
 
 def processPage(reader, writer, pageNum, op, manga):
@@ -84,17 +90,25 @@ def processPage(reader, writer, pageNum, op, manga):
 		stitchPages(reader, writer, pageNum, manga)
 		writer.pages[-1].rotate(90)
 
+# unlike the function in comicSpreadStitch.py, this one has no overlap detection (not that that worked well anyway...)
 def stitchPages(reader, writer, pageNum, manga):
 	if manga:
-		leftPage = reader.pages[pageNum + 1]
+		if pageNum + 1 == len(reader.pages):
+			leftPage = reader.pages[0]
+		else:
+			leftPage = reader.pages[pageNum + 1]
 		rightPage = reader.pages[pageNum]
 	else:
 		leftPage = reader.pages[pageNum]
-		rightPage = reader.pages[pageNum + 1]
+		if pageNum + 1 == len(reader.pages):
+			rightPage = reader.pages[0]
+		else:
+			rightPage = reader.pages[pageNum + 1]
 	
 	leftWidth = leftPage.mediabox.right - leftPage.mediabox.left
 	rightWidth = rightPage.mediabox.right - rightPage.mediabox.left
 	
+	# TODO: see about scaling one page to the other in case of size mismatches
 	leftPage.mediabox = RectangleObject((leftPage.mediabox.left, leftPage.mediabox.bottom, leftPage.mediabox.right + rightWidth, leftPage.mediabox.top))
 	leftPage.cropbox = RectangleObject((leftPage.mediabox.left, leftPage.mediabox.bottom, leftPage.mediabox.right + rightWidth, leftPage.mediabox.top))
 	leftPage.trimbox = RectangleObject((leftPage.mediabox.left, leftPage.mediabox.bottom, leftPage.mediabox.right + rightWidth, leftPage.mediabox.top))
