@@ -1,4 +1,5 @@
-from pypdf import PdfReader, PdfWriter
+from pypdf import PdfReader, PdfWriter, Transformation
+from pypdf.generic import RectangleObject
 import argparse
 import ast
 
@@ -43,18 +44,18 @@ def processPdf(book, pageList, manga):
 				if i + 1 not in pagesList:
 					writer.add_page(reader.pages[i])
 				else:
-					processPage(reader, writer, i, currOp)
+					processPage(reader, writer, i, currOp, manga)
 		
 		# yes processing needed
 		else:
 			p = pagesList.index(i + 1)
-			processPage(reader, writer, i, opsList[p])
+			processPage(reader, writer, i, opsList[p], manga)
 	
 	# write file
 	with open("C:\\Users\\rmauz\\Desktop\\comic-spread-stitch\\test-resources\\pdf\\test.pdf", "wb") as fp:
 		writer.write(fp)
 
-def processPage(reader, writer, pageNum, op):
+def processPage(reader, writer, pageNum, op, manga):
 	# delete page by not adding it to the destination PDF
 	if op == 'd':
 		return
@@ -68,6 +69,49 @@ def processPage(reader, writer, pageNum, op):
 	elif op == 'r':
 		writer.add_page(reader.pages[pageNum])
 		writer.pages[-1].rotate(90)
+	
+	# stitch pages without rotating
+	elif op == '':
+		stitchPages(reader, writer, pageNum, manga)
+	
+	# stitch pages and rotate left
+	elif op == 'm':
+		stitchPages(reader, writer, pageNum, manga)
+		writer.pages[-1].rotate(270)
+	
+	# stitch pages and rotate right
+	elif op == 's':
+		stitchPages(reader, writer, pageNum, manga)
+		writer.pages[-1].rotate(90)
+
+def stitchPages(reader, writer, pageNum, manga):
+	if manga:
+		leftPage = reader.pages[pageNum + 1]
+		rightPage = reader.pages[pageNum]
+	else:
+		leftPage = reader.pages[pageNum]
+		rightPage = reader.pages[pageNum + 1]
+	
+	leftWidth = leftPage.mediabox.right - leftPage.mediabox.left
+	rightWidth = rightPage.mediabox.right - rightPage.mediabox.left
+	
+	leftPage.mediabox = RectangleObject((leftPage.mediabox.left, leftPage.mediabox.bottom, leftPage.mediabox.right + rightWidth, leftPage.mediabox.top))
+	leftPage.cropbox = RectangleObject((leftPage.mediabox.left, leftPage.mediabox.bottom, leftPage.mediabox.right + rightWidth, leftPage.mediabox.top))
+	leftPage.trimbox = RectangleObject((leftPage.mediabox.left, leftPage.mediabox.bottom, leftPage.mediabox.right + rightWidth, leftPage.mediabox.top))
+	leftPage.bleedbox = RectangleObject((leftPage.mediabox.left, leftPage.mediabox.bottom, leftPage.mediabox.right + rightWidth, leftPage.mediabox.top))
+	leftPage.artbox = RectangleObject((leftPage.mediabox.left, leftPage.mediabox.bottom, leftPage.mediabox.right + rightWidth, leftPage.mediabox.top))
+	
+	rightPage.mediabox = RectangleObject((rightPage.mediabox.left, rightPage.mediabox.bottom, rightPage.mediabox.right + rightWidth, rightPage.mediabox.top))
+	rightPage.cropbox = RectangleObject((rightPage.mediabox.left, rightPage.mediabox.bottom, rightPage.mediabox.right + rightWidth, rightPage.mediabox.top))
+	rightPage.trimbox = RectangleObject((rightPage.mediabox.left, rightPage.mediabox.bottom, rightPage.mediabox.right + rightWidth, rightPage.mediabox.top))
+	rightPage.bleedbox = RectangleObject((rightPage.mediabox.left, rightPage.mediabox.bottom, rightPage.mediabox.right + rightWidth, rightPage.mediabox.top))
+	rightPage.artbox = RectangleObject((rightPage.mediabox.left, rightPage.mediabox.bottom, rightPage.mediabox.right + rightWidth, rightPage.mediabox.top))
+	
+	op = Transformation().translate(tx = leftWidth)
+	rightPage.add_transformation(op)
+	leftPage.merge_page(rightPage)
+	
+	writer.add_page(leftPage)
 
 if __name__ == "__main__":
 	main()
