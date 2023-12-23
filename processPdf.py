@@ -26,23 +26,46 @@ def processPdf(book, pageList, manga):
 	# For each page in the source PDF:
 	# If neither that page nor the previous one is in the list, add it to the destination PDF
 	# If that page is in the list, process it and the next page
-	# If the previous page is in the list, the current page would have been processed along with the last one, so leave it alone
+	# If the previous page is in the list, check how it was transformed to see whether anything should be done with this one
 	for i in range(len(reader.pages)):
 		# no processing needed
 		if i + 1 not in pagesList and i not in pagesList:
 			writer.add_page(reader.pages[i])
 		
+		# maybe processing needed
+		elif i in pagesList:
+			p = pagesList.index(i)
+			prevOp = opsList[p]
+			currOp = opsList[p + 1]
+			if prevOp in ['d', 'l', 'r']:
+				if i + 1 not in pagesList:
+					writer.add_page(reader.pages[i])
+				else:
+					processPage(reader, writer, i, currOp)
+		
 		# yes processing needed
-		elif i + 1 in pagesList:
+		else:
 			p = pagesList.index(i + 1)
-			
-			# delete page and add the next one to the destination PDF
-			if opsList[p] == 'd' and i < len(reader.pages) - 1:
-				writer.add_page(reader.pages[i + 1])
+			processPage(reader, writer, i, opsList[p])
 	
 	# write file
 	with open("C:\\Users\\rmauz\\Desktop\\comic-spread-stitch\\test-resources\\pdf\\test.pdf", "wb") as fp:
 		writer.write(fp)
+
+def processPage(reader, writer, pageNum, op):
+	# delete page by not adding it to the destination PDF
+	if op == 'd':
+		return
+	
+	# rotate page 90 degrees left and add it to the destination PDF
+	elif op == 'l':
+		writer.add_page(reader.pages[pageNum])
+		writer.pages[-1].rotate(270)
+	
+	# rotate page 90 degrees right and add it to the destination PDF
+	elif op == 'r':
+		writer.add_page(reader.pages[pageNum])
+		writer.pages[-1].rotate(90)
 
 if __name__ == "__main__":
 	main()
