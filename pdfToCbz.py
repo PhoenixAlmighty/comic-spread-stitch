@@ -15,6 +15,8 @@ def main():
 	args = parser.parse_args()
 	convertPdfToCbz(args.book)
 
+# This function grabs the first image from each page of the PDF
+# and puts it into a CBZ archive
 # As PDFs are black magic, this may not get the desired result
 def convertPdfToCbz(book):
 	[root, ext] = os.path.splitext(book)
