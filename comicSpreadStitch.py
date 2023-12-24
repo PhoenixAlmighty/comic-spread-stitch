@@ -4,6 +4,7 @@ import os
 import shutil
 import numpy as np
 import epubToCbz
+import processPdf
 import argparse
 import traceback
 
@@ -30,16 +31,23 @@ def main():
 			manga, backedup, epub, pdf, rightlines, unknownFlag = getBookFlags(parts[2:])
 			pageNumbersNotPresent = (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2
 			
-			if pdf:
-				print("{} skipped because PDF input is not yet supported.".format(bookDir))
-				skipped += 1
-				continue
+			# if pdf:
+				# print("{} skipped because PDF input is not yet supported.".format(bookDir))
+				# skipped += 1
+				# continue
 			
 			os.chdir(bookDir)
 			
-			bookFileName = findBookFile(backedup, epub)
+			bookFileType = ""
+			if epub:
+				bookFileType = "ePub"
+			elif pdf:
+				bookFileType = "PDF"
+			else:
+				bookFileType = "CBZ"
+			bookFileName = findBookFile(backedup, epub, pdf)
 			if bookFileName == "":
-				print("{} has no {} files in it. Check your input.".format(bookDir, "ePub" if epub else "CBZ"))
+				print("{} has no {} files in it. Check your input.".format(bookDir, bookFileType))
 			if not bookFileName:
 				skipped += 1
 				continue
@@ -47,6 +55,11 @@ def main():
 			if pageNumbersNotPresent and epub:
 				epubToCbz.convertEpubToCbz(os.path.join(bookDir, bookFileName))
 				processed += 1
+				continue
+			
+			if pageNumbersNotPresent and pdf:
+				print("Conversion from PDF to CBZ doesn't always work the way you want it to. If you want to try anyway, please use the pdfToCbz.py script. Just be sure to check the output afterwards.")
+				skipped += 1
 				continue
 			
 			if pageNumbersNotPresent:
@@ -66,6 +79,16 @@ def main():
 			if not pages:
 				skipped += 1
 				continue
+			
+			if pdf:
+				status = processPdf.processPdf(bookFileName, pages, manga, backedup)
+				if status:
+					skipped += 1
+					continue
+				else:
+					printSuccess(bookFileName, pages)
+					processed += 1
+					continue
 			
 			with ZipFile(bookFileName, 'r') as zip:
 				zip.extractall(path = tempPath)
@@ -325,7 +348,7 @@ def convertPageList(pageString, bookDir):
 	
 	return pageIntList
 
-def findBookFile(backedup, epub):
+def findBookFile(backedup, epub, pdf):
 	bookFiles = os.listdir()
 	bookFileName = ""
 	backupFound = False
@@ -334,16 +357,22 @@ def findBookFile(backedup, epub):
 	if epub:
 		ext = ".epub"
 		backupExt = ".epub_old"
+		upperExt = "EPUB"
+	elif pdf:
+		ext = ".pdf"
+		backupExt = ".pdf_old"
+		upperExt = "PDF"
 	else:
 		ext = ".cbz"
 		backupExt = ".cbz_old"
+		upperExt = "CBZ"
 	for file in bookFiles:
 		filename, extension = os.path.splitext(file)
 		if not backedup:
 			if extension == ext:
 				bookFileName = file
 			if extension == backupExt:
-				print("{} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the {}_OLD file or adding \"backedup\" as a flag on the input.\n".format(os.getcwd(), "EPUB" if epub else "CBZ"))
+				print("{} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the {}_OLD file or adding \"backedup\" as a flag on the input.\n".format(os.getcwd(), upperExt))
 				return False
 		else:
 			if extension == ext:

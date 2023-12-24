@@ -19,6 +19,11 @@ def processPdf(book, pageList, manga, backedup):
 	# read source PDF
 	reader = PdfReader(book)
 	
+	# check whether reader.pages is long enough to cover the last page in pagesList
+	if (pageList[-1][1] in ["l", "r", "d"] and len(reader.pages) < pageList[-1][0]) or (not (pageList[-1][1] in ["l", "r", "d"]) and len(reader.pages) < pageList[-1][0] + 1):
+		print("{} skipped because the last page to process is past the end of the book.".format(book))
+		return 1
+	
 	# create destination PDF
 	writer = PdfWriter()
 	
@@ -53,13 +58,24 @@ def processPdf(book, pageList, manga, backedup):
 			p = pagesList.index(i + 1)
 			processPage(reader, writer, i, opsList[p], manga)
 	
+	# set right-to-left reading direction if manga
+	if manga:
+		writer.create_viewer_preferences()
+		writer.viewer_preferences.direction = "/R2L"
+	
 	# rename old file
 	if not backedup:
-		os.rename(book, book + "_old")
+		try:
+			os.rename(book, book + "_old")
+		except PermissionError as permErr:
+			print("{} is open in another program. Close it and run the script again.".format(book))
+			return 1
 	
 	# write file
 	with open(book, "wb") as fp:
 		writer.write(fp)
+	
+	return 0
 
 def processPage(reader, writer, pageNum, op, manga):
 	# delete page by not adding it to the destination PDF
