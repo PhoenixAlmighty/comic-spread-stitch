@@ -24,6 +24,12 @@ def processPdf(book, pageList, manga, backedup):
 		print("{} skipped because the last page to process is past the end of the book.".format(book))
 		return 1
 	
+	#check whether back cover needs to be altered
+	backcover = False
+	if pageList[0][0] == 0:
+		backcover = True
+		del pageList[0]
+	
 	# create destination PDF
 	writer = PdfWriter()
 	
@@ -31,11 +37,11 @@ def processPdf(book, pageList, manga, backedup):
 	pagesList = [item[0] for item in pageList]
 	opsList = [item[1] for item in pageList]
 	
-	# For each page in the source PDF:
+	# For each page in the source PDF except the back cover:
 	# If neither that page nor the previous one is in the list, add it to the destination PDF
 	# If that page is in the list, process it and the next page
 	# If the previous page is in the list, check how it was transformed to see whether anything should be done with this one
-	for i in range(len(reader.pages)):
+	for i in range(len(reader.pages) - 1):
 		# no processing needed
 		if i + 1 not in pagesList and i not in pagesList:
 			writer.add_page(reader.pages[i])
@@ -57,6 +63,12 @@ def processPdf(book, pageList, manga, backedup):
 		else:
 			p = pagesList.index(i + 1)
 			processPage(reader, writer, i, opsList[p], manga)
+	
+	# handle back cover
+	if backcover:
+		stitchPages(reader, writer, -1, manga)
+	else:
+		writer.add_page(reader.pages[-1])
 	
 	# set right-to-left reading direction if manga
 	if manga:
@@ -107,19 +119,28 @@ def processPage(reader, writer, pageNum, op, manga):
 		writer.pages[-1].rotate(90)
 
 # unlike the function in comicSpreadStitch.py, this one has no overlap detection (not that that worked well anyway...)
+# if pageNum is -1, that represents the back cover
 def stitchPages(reader, writer, pageNum, manga):
-	if manga:
-		if pageNum + 1 == len(reader.pages):
+	if pageNum == -1:
+		if manga:
 			leftPage = reader.pages[0]
+			rightPage = reader.pages[-1]
 		else:
-			leftPage = reader.pages[pageNum + 1]
-		rightPage = reader.pages[pageNum]
-	else:
-		leftPage = reader.pages[pageNum]
-		if pageNum + 1 == len(reader.pages):
+			leftPage = reader.pages[-1]
 			rightPage = reader.pages[0]
+	else:
+		if manga:
+			if pageNum + 1 == len(reader.pages):
+				leftPage = reader.pages[0]
+			else:
+				leftPage = reader.pages[pageNum + 1]
+			rightPage = reader.pages[pageNum]
 		else:
-			rightPage = reader.pages[pageNum + 1]
+			leftPage = reader.pages[pageNum]
+			if pageNum + 1 == len(reader.pages):
+				rightPage = reader.pages[0]
+			else:
+				rightPage = reader.pages[pageNum + 1]
 	
 	leftWidth = leftPage.mediabox.right - leftPage.mediabox.left
 	rightWidth = rightPage.mediabox.right - rightPage.mediabox.left
