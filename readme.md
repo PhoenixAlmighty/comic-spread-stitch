@@ -75,3 +75,5 @@ There are two arguments you can add to the command line, both of which have to d
 - `-c` or `--compression`: If the images are stored in a lossy compression format, such as JPG, checking to see if two columns match perfectly may give false negatives. This argument provides the maximum difference allowed between the same color channel of two pixels for the script to consider it an overlap. Defaults to 75 (out of 255).
 
 If you find that spreads seem to have jumps in the middle where part of the image repeats, try entering different values for these arguments and see if that helps.
+# Unit test files
+If you decide to make any updates of your own, the files `test_comicSpreadStitch.py` and `test_epubToCbz.py` contain unit tests that can be used to check whether your changes break other functionality. Be warned about relying on them, however; they are not comprehensive, and depending on what changes you make, the tests may break even though your changes are working as intended. To run them, navigate to the project directory in a command prompt and run `python test_comicSpreadStitch.py` or `python test_epubToCbz.py`.
