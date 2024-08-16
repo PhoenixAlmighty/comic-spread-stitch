@@ -20,7 +20,7 @@ def main():
 	skipped = 0
 	errors = 0
 	
-	with open("pagesToCombine.txt", "r") as pagesFile:
+	with open("pagesToProcess.txt", "r") as pagesFile:
 		lines = pagesFile.readlines()
 	
 	for line in lines:

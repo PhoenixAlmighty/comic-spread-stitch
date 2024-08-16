@@ -246,7 +246,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 	def test_getBookFlags_epub(self):
 		self.assertEqual(comicSpreadStitch.getBookFlags(["epub"]), (False, False, True, False, False), "Epub flag should be true")
 		
-	# Epub flag only
+	# Rightlines flag only
 	def test_getBookFlags_rightlines(self):
 		self.assertEqual(comicSpreadStitch.getBookFlags(["rightlines"]), (False, False, False, True, False), "Rightlines flag should be true")
 		
