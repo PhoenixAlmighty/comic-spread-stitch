@@ -102,7 +102,7 @@ def main():
 				docDir, opfFile = epubToCbz.findOpfEnterDoc(bookDir, tempPath)
 				if not opfFile:
 					skipped += 1
-					print("Skipping {}.".format(bookFileName))
+					print("Skipping {} because the OPF file could not be found.".format(bookFileName))
 					continue
 				manifest, spine = epubToCbz.getManifestAndSpine(opfFile)
 				imgList = epubToCbz.getImageFilenames(manifest, spine)
@@ -372,7 +372,7 @@ def findBookFile(backedup, epub, pdf):
 			if extension == ext:
 				bookFileName = file
 			if extension == backupExt:
-				print("{} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the {}_OLD file or adding \"backedup\" as a flag on the input.\n".format(os.getcwd(), upperExt))
+				print("{} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the {}_OLD file or adding \"backedup\" as an option on the input.\n".format(os.getcwd(), upperExt))
 				return False
 		else:
 			if extension == ext:
