@@ -186,7 +186,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 	def test_findBookFile_noCBZ(self):
 		noCBZ = os.path.join(os.path.dirname(__file__), "test-resources", "no-cbz")
 		os.chdir(noCBZ)
-		self.assertEqual(comicSpreadStitch.findBookFile(False, False), "", "{} should not have a CBZ file.".format(noCBZ))
+		self.assertEqual(comicSpreadStitch.findBookFile(False, False, False), "", "{} should not have a CBZ file.".format(noCBZ))
 		
 	# Directory has a CBZ_OLD file
 	def test_findBookFile_CBZOLD(self):
@@ -194,24 +194,24 @@ class TestComicSpreadStitch(unittest.TestCase):
 		os.chdir(yesCBZOLD)
 		capturedOutput = io.StringIO()
 		sys.stdout = capturedOutput
-		file = comicSpreadStitch.findBookFile(False, False)
+		file = comicSpreadStitch.findBookFile(False, False, False)
 		sys.stdout = sys.__stdout__
 		self.assertFalse(file, "{} should have a CBZ_OLD file.".format(yesCBZOLD))
 		self.assertEqual(capturedOutput.getvalue(),
-			"{} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the CBZ_OLD file or adding \"backedup\" as a flag on the input.\n\n".format(yesCBZOLD),
+			"{} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the CBZ_OLD file or adding \"backedup\" as an option on the input.\n\n".format(yesCBZOLD),
 			"Console output is incorrect.")
 		
 	# Directory has a CBZ file and no CBZ_OLD file
 	def test_findBookFile_onlyCBZ(self):
 		correctFilesDir = os.path.join(os.path.dirname(__file__), "test-resources", "cbz")
 		os.chdir(correctFilesDir)
-		self.assertEqual(comicSpreadStitch.findBookFile(False, False), "dummy.cbz", "{} should have a CBZ file but not a CBZ_OLD file.".format(correctFilesDir))
+		self.assertEqual(comicSpreadStitch.findBookFile(False, False, False), "dummy.cbz", "{} should have a CBZ file but not a CBZ_OLD file.".format(correctFilesDir))
 		
 	# Directory has a CBZ_OLD file, but backedup flag is set
 	def test_findBookFile_backedupCBZOLD(self):
 		yesCBZOLD = os.path.join(os.path.dirname(__file__), "test-resources", "cbz-old")
 		os.chdir(yesCBZOLD)
-		self.assertEqual(comicSpreadStitch.findBookFile(True, False), "dummy.cbz", "The CBZ_OLD file in {} should be ignored because the backedup flag is set.".format(yesCBZOLD))
+		self.assertEqual(comicSpreadStitch.findBookFile(True, False, False), "dummy.cbz", "The CBZ_OLD file in {} should be ignored because the backedup flag is set.".format(yesCBZOLD))
 		
 	# Directory has no CBZ_OLD file, but backedup flag is set
 	def test_findBookFile_backedupCBZ(self):
@@ -219,44 +219,50 @@ class TestComicSpreadStitch(unittest.TestCase):
 		os.chdir(correctFilesDir)
 		capturedOutput = io.StringIO()
 		sys.stdout = capturedOutput
-		file = comicSpreadStitch.findBookFile(True, False)
+		file = comicSpreadStitch.findBookFile(True, False, False)
 		sys.stdout = sys.__stdout__
 		self.assertFalse(file, "{} should not have a CBZ_OLD file.".format(correctFilesDir))
 		self.assertEqual(capturedOutput.getvalue(),
 			"{} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n\n".format(correctFilesDir),
 			"Console output is incorrect.")
 	
-	# should have tests for when epub is true, but I can do that later
+	# TODO: add tests for ePubs
+	
+	# TODO: add tests for PDFs
 	
 	# getBookFlags tests
 	
 	# No flags
 	def test_getBookFlags_noFlags(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags([]), (False, False, False, False, False), "All flags should be false")
+		self.assertEqual(comicSpreadStitch.getBookFlags([]), (False, False, False, False, False, False), "All flags should be false")
 		
 	# Manga flag only
 	def test_getBookFlags_manga(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["manga"]), (True, False, False, False, False), "Manga flag should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["manga"]), (True, False, False, False, False, False), "Manga flag should be true")
 		
 	# Backedup flag only
 	def test_getBookFlags_backedup(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup"]), (False, True, False, False, False), "Backedup flag should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup"]), (False, True, False, False, False, False), "Backedup flag should be true")
 		
 	# Epub flag only
 	def test_getBookFlags_epub(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["epub"]), (False, False, True, False, False), "Epub flag should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["epub"]), (False, False, True, False, False, False), "Epub flag should be true")
+	
+	# PDF flag only
+	def test_getBookFlags_pdf(self):
+		self.assertEqual(comicSpreadStitch.getBookFlags(["pdf"]), (False, False, False, True, False, False), "PDF flag should be true")
 		
 	# Rightlines flag only
 	def test_getBookFlags_rightlines(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["rightlines"]), (False, False, False, True, False), "Rightlines flag should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["rightlines"]), (False, False, False, False, True, False), "Rightlines flag should be true")
 		
 	# Unknown flag only
 	def test_getBookFlags_unknown(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["blah"]), (False, False, False, False, True), "Unknown flag should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["blah"]), (False, False, False, False, False, True), "Unknown flag should be true")
 		
 	# Manga and backedup flags together
 	def test_getBookFlags_mangaAndBackedup(self):
-		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup", "manga"]), (True, True, False, False, False), "Manga and backedup flags should be true")
+		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup", "manga"]), (True, True, False, False, False, False), "Manga and backedup flags should be true")
 	
 	# processPages tests
 	# The images used here are from https://github.com/mohammadimtiazz/standard-test-images-for-Image-Processing
@@ -269,7 +275,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], False, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], False, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match baboonboat.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -295,7 +301,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], False, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], False, 50, 75)
 		
 		# By this point, baboon.png should still exist and boat.png should match boatbaboon.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -320,7 +326,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		testImg = cv2.imread("babooncw.png")
 		baboon = cv2.imread("baboon.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], False, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], False, 50, 75)
 		
 		# By this point, baboon.png should match babooncw.png
 		processedImg = cv2.imread("baboon.png")
@@ -339,7 +345,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], False, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], False, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match baboonboatcw.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -364,7 +370,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		testImg = cv2.imread("baboonccw.png")
 		baboon = cv2.imread("baboon.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], False, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], False, 50, 75)
 		
 		# By this point, baboon.png should match baboonccw.png
 		processedImg = cv2.imread("baboon.png")
@@ -383,7 +389,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], False, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], False, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match baboonboatccw.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -407,7 +413,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		os.chdir(testImgDir)
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], False, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], False, 50, 75)
 		
 		# By this point, boat.png should no longer exist; nothing else should be changed
 		imgs = os.listdir()
@@ -426,7 +432,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], True, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], True, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match boatbaboon.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -452,7 +458,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], True, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], True, 50, 75)
 		
 		# By this point, baboon.png should still exist and boat.png should match baboonboat.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -477,7 +483,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		testImg = cv2.imread("babooncw.png")
 		baboon = cv2.imread("baboon.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], True, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], True, 50, 75)
 		
 		# By this point, baboon.png should match babooncw.png
 		processedImg = cv2.imread("baboon.png")
@@ -496,7 +502,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], True, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], True, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match boatbabooncw.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -521,7 +527,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		testImg = cv2.imread("baboonccw.png")
 		baboon = cv2.imread("baboon.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], True, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], True, 50, 75)
 		
 		# By this point, baboon.png should match baboonccw.png
 		processedImg = cv2.imread("baboon.png")
@@ -540,7 +546,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		baboon = cv2.imread("baboon.png")
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], True, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], True, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match boatbaboonccw.png
 		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
@@ -564,7 +570,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		os.chdir(testImgDir)
 		boat = cv2.imread("boat.png")
 		
-		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], True, 50)
+		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], True, 50, 75)
 		
 		# By this point, boat.png should no longer exist; nothing else should be changed
 		imgs = os.listdir()
@@ -585,7 +591,7 @@ class TestComicSpreadStitch(unittest.TestCase):
 		left = cv2.imread("leftbaboon.png")
 		right = cv2.imread("rightbaboon.png")
 		
-		combImg = comicSpreadStitch.stitchPages(left, right, 50)
+		combImg = comicSpreadStitch.stitchPages(left, right, 50, 75)
 		
 		self.assertTrue(combImg.shape == baboon.shape and not(np.bitwise_xor(combImg, baboon).any()), "Output image is incorrect")
 
