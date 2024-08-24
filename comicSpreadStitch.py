@@ -44,13 +44,11 @@ def main():
 			bookDir = ""
 			parts = line.split("|")
 			bookDir = parts[0]
+			if not bookDirIsValid(bookDir):
+				skipped += 1
+				continue
 			manga, backedup, epub, pdf, rightlines, unknownFlag = getBookFlags(parts[2:])
 			pageNumbersNotPresent = (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2
-			
-			# if pdf:
-				# print("{} skipped because PDF input is not yet supported.".format(bookDir))
-				# skipped += 1
-				# continue
 			
 			os.chdir(bookDir)
 			
@@ -78,6 +76,25 @@ def main():
 				skipped += 1
 				continue
 			
+			# This should not be reached if pageNumbersNotPresent and epub, as there is a continue statement in that if block			
+			if pageNumbersNotPresent and rightlines:
+				with ZipFile(bookFileName, 'r') as zip:
+					zip.extractall(path = tempPath)
+				os.chdir(tempPath)
+				imgList = getCbzImgs()
+				removeRightLines(imgList)
+				os.chdir(bookDir)
+				if not backedup:
+					os.rename(bookFileName, bookFileName + "_old")
+				with ZipFile(bookFileName, 'w') as newZip:
+					for file in imgList:
+						filePath = os.path.join(tempPath, file)
+						newZip.write(filePath, arcname = file)
+				shutil.rmtree(tempPath)
+				print("{} has had the right lines removed.".format(bookFileName))
+				processed += 1
+				continue
+			
 			if pageNumbersNotPresent:
 				print("The line for {} is missing page numbers.".format(bookDir.strip()))
 				skipped += 1
@@ -88,9 +105,6 @@ def main():
 				continue
 		
 			# check for errors in input
-			if not bookDirIsValid(bookDir):
-				skipped += 1
-				continue
 			pages = convertPageList(parts[1], bookDir)
 			if not pages:
 				skipped += 1

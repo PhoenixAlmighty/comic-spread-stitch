@@ -49,7 +49,10 @@ There are also several options that can be applied on a per-book basis. These sh
 D:\Calibre Library\Jaouen Salaun\Asphalt Blues (2236)||epub
 ```
 - `manga`: Use if the pages are supposed to be read right-to-left, such as if the book is manga. If this option is not specified, the pages will be stitched together as if they're supposed to be read left-to-right, like Western comics.
-- `rightlines`: Sometimes a digital comic book will have a line of white pixels running down the right side of each page. If specified, this option will remove the rightmost column of pixels from each page image. This option does nothing on PDF files. When used on CBZ or ePub files, it will significantly increase the time taken to process the book.
+- `rightlines`: Sometimes a digital comic book will have a line of white pixels running down the right side of each page. If specified, this option will remove the rightmost column of pixels from each page image. This option does nothing on PDF files. When used on CBZ or ePub files, it will significantly increase the time taken to process the book. If the book has no pages you wish to alter or remove, but you would like to remove the right lines, simply leave the page list empty, like so:
+```
+D:\Calibre Library\Chip Zdarsky\Newburn, Vol. 1 (2910)||rightlines
+```
 - `backedup`: This script leaves an unaltered backup of each original file it processes, stored with the file extension `.cbz_old` or `.pdf_old`, depending on what the input file type was (since it doesn't output ePub files, ePub inputs are simply left as is). If you try to process a file that has a backup of this kind without specifying this option, the script will skip it. If this option is specified, the script will process the already-processed file, using its page numbers. The backup file will remain unchanged, and a new backup will not be generated.
 
 If more than one option must be applied to the same book, simply separate each option with a `|`, like so:
