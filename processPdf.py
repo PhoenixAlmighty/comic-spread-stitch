@@ -83,7 +83,13 @@ def processPdf(book, pageList, manga, backedup):
 	# handle back cover
 	if backcover:
 		stitchPages(reader, writer, -1, manga)
-	# this else clause may be why the last page can't be deleted
+	# don't add back cover if it was supposed to be deleted or stitched to the previous page
+	elif (len(reader.pages) in pagesList and opsList[pagesList.index(len(reader.pages))] == "d") or (len(reader.pages) - 1 in pagesList and opsList[pagesList.index(len(reader.pages) - 1)] in ["", "m", "s"]):
+		pass
+	# rotate back cover if needed
+	elif len(reader.pages) in pagesList and opsList[pagesList.index(len(reader.pages))] in ["l", "r"]:
+		processPage(reader, writer, len(reader.pages) - 1, opsList[pagesList.index(len(reader.pages))], manga)
+	# add back cover unchanged if no other operations on it
 	else:
 		writer.add_page(reader.pages[-1])
 	
