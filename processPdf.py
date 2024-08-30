@@ -83,6 +83,7 @@ def processPdf(book, pageList, manga, backedup):
 	# handle back cover
 	if backcover:
 		stitchPages(reader, writer, -1, manga)
+	# this else clause may be why the last page can't be deleted
 	else:
 		writer.add_page(reader.pages[-1])
 	
