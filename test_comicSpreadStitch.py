@@ -22,159 +22,127 @@ import sys
 import numpy as np
 import cv2
 
-class TestComicSpreadStitch(unittest.TestCase):
-	# printSuccess tests
+class TestPrintSuccess(unittest.TestCase):
+	def setUp(self):
+		self.capturedOutput = io.StringIO()
+		sys.stdout = self.capturedOutput
+	
+	def tearDown(self):
+		sys.stdout = sys.__stdout__
 	
 	# Back cover only
 	def test_printSuccess_backCoverOnly(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[0, ""]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on the back cover.\n", "Console output is wrong for back cover only.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on the back cover.\n", "Console output is wrong for back cover only.")
 		
 	# Back cover + 1 spread
 	def test_printSuccess_backCoverOneSpread(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[0, ""], [2, ""]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on the back cover and page 2.\n", "Console output is wrong for back cover plus 1 spread.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on the back cover and page 2.\n", "Console output is wrong for back cover plus 1 spread.")
 		
 	# Back cover + 2 spreads
 	def test_printSuccess_backCoverTwoSpreads(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[0, ""], [2, ""], [4, ""]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on the back cover and pages 2 and 3.\n", "Console output is wrong for back cover plus 2 spreads.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on the back cover and pages 2 and 3.\n", "Console output is wrong for back cover plus 2 spreads.")
 		
 	# Back cover + 3 or more spreads
 	def test_printSuccess_backCoverThreeSpreads(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[0, ""], [2, ""], [4, ""], [6, ""]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on the back cover and pages 2, 3, and 4.\n", "Console output is wrong for back cover plus 3 spreads.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on the back cover and pages 2, 3, and 4.\n", "Console output is wrong for back cover plus 3 spreads.")
 		
 	# 1 spread
 	def test_printSuccess_oneSpread(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[2, ""]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on page 2.\n", "Console output is wrong for 1 spread.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on page 2.\n", "Console output is wrong for 1 spread.")
 		
 	# 2 spreads
 	def test_printSuccess_twoSpreads(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, ""]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on pages 2 and 3.\n", "Console output is wrong for 2 spreads.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 2 and 3.\n", "Console output is wrong for 2 spreads.")
 		
 	# 3 or more spreads
 	def test_printSuccess_threeSpreads(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, ""], [6, ""]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, and 4.\n", "Console output is wrong for 3 spreads.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, and 4.\n", "Console output is wrong for 3 spreads.")
 		
 	# 1 rotation followed by 1 spread
 	def test_printSuccess_rotationThenSpread(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[4, "l"], [6, ""]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on pages 4 and 6.\n", "Console output is wrong for 2 spreads and 1 rotation.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 4 and 6.\n", "Console output is wrong for 2 spreads and 1 rotation.")
 		
 	# 2 spreads, 1 rotation
 	def test_printSuccess_twoSpreadsOneRotation(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, "l"], [6, ""]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, and 5.\n", "Console output is wrong for 2 spreads and 1 rotation.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, and 5.\n", "Console output is wrong for 2 spreads and 1 rotation.")
 		
 	# 3 spreads, 1 of which is rotated
 	def test_printSuccess_threeSpreadsOneRotated(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, "m"], [6, ""]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, and 4.\n", "Console output is wrong for 3 spreads, 1 of which has been rotated.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, and 4.\n", "Console output is wrong for 3 spreads, 1 of which has been rotated.")
 	
 	# 3 page deletions, no modifications
 	def test_printSuccess_threeDeletions(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[2, "d"], [4, "d"], [6, "d"]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book has had 3 pages deleted.\n", "Console output is wrong for 3 page deletions and no page modifications.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book has had 3 pages deleted.\n", "Console output is wrong for 3 page deletions and no page modifications.")
 		
 	# Check that all modifiers are handled correctly
 	def test_printSuccess_allModifiers(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, "m"], [6, "l"], [8, "r"], [10, "s"], [12, "d"], [14, ""]])
-		sys.stdout = sys.__stdout__
-		self.assertEqual(capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, 4, 6, 8, and 10.\n", "At least one modifier has been handled incorrectly.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, 4, 6, 8, and 10.\n", "At least one modifier has been handled incorrectly.")
 	
-	# bookDirIsValid tests
+
+class TestBookDirIsValid(unittest.TestCase):
+	def setUp(self):
+		self.capturedOutput = io.StringIO()
+		sys.stdout = self.capturedOutput
+	
+	def tearDown(self):
+		sys.stdout = sys.__stdout__
 	
 	# No book directory
 	def test_bookDirIsValid_noDirectory(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		validity = comicSpreadStitch.bookDirIsValid("")
-		sys.stdout = sys.__stdout__
 		self.assertFalse(validity, "Empty string for book directory should return false.")
-		self.assertEqual(capturedOutput.getvalue(), "No book directory on this line. Check your input.\n", "Console output is incorrect for empty string input as book directory.")
+		self.assertEqual(self.capturedOutput.getvalue(), "No book directory on this line. Check your input.\n", "Console output is incorrect for empty string input as book directory.")
 		
 	# Book directory that doesn't exist on my computer
 	def test_bookDirIsValid_nonexistentDirectory(self):
 		nonexistentDir = "D:\Calibre Library\Erik Larsen\Savage Dragon #179 (1429)"
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		validity = comicSpreadStitch.bookDirIsValid(nonexistentDir)
-		sys.stdout = sys.__stdout__
 		self.assertFalse(validity, "Book directory that doesn't exist on this computer should return false.")
-		self.assertEqual(capturedOutput.getvalue(), "{} does not exist. Check your filepath.\n".format(nonexistentDir), "Console output is incorrect for nonexistent book directory.")
+		self.assertEqual(self.capturedOutput.getvalue(), "{} does not exist. Check your filepath.\n".format(nonexistentDir), "Console output is incorrect for nonexistent book directory.")
 		
 	# Book directory that does exist on my computer
 	def test_bookDirIsValid_realDirectory(self):
 		realBookDir = "D:\Calibre Library\Erik Larsen\Savage Dragon #179 (1428)"
 		self.assertTrue(comicSpreadStitch.bookDirIsValid(realBookDir), "Directory that exists should return true.")
 	
-	# convertPageList tests
+
+class TestConvertPageList(unittest.TestCase):
+	def setUp(self):
+		self.capturedOutput = io.StringIO()
+		sys.stdout = self.capturedOutput
+	
+	def tearDown(self):
+		sys.stdout = sys.__stdout__
 	
 	# No pages
 	def test_convertPageList_noPages(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		pageList = comicSpreadStitch.convertPageList("", "Test book directory")
-		sys.stdout = sys.__stdout__
 		self.assertFalse(pageList, "Should return False if string is empty.")
-		self.assertEqual(capturedOutput.getvalue(), "Test book directory has no pages to combine. Check your input.\n", "Console output is incorrect for empty page list.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Test book directory has no pages to combine. Check your input.\n", "Console output is incorrect for empty page list.")
 		
 	# Letters in list that aren't attached to numbers
 	def test_convertPageList_lonelyLetters(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		pageList = comicSpreadStitch.convertPageList("1,2,a", "Test book directory")
-		sys.stdout = sys.__stdout__
 		self.assertFalse(pageList, "Should return False if string contains letters that aren't attached to numbers.")
-		self.assertEqual(capturedOutput.getvalue(), "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.\n", "Console output is incorrect for non-numeric page list.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.\n", "Console output is incorrect for non-numeric page list.")
 		
 	# Letters in list that don't match the defined modifiers
 	def test_convertPageList_wrongModifiers(self):
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		pageList = comicSpreadStitch.convertPageList("1,2,3a", "Test book directory")
-		sys.stdout = sys.__stdout__
 		self.assertFalse(pageList, "Should return False if string contains letters that aren't attached to numbers.")
-		self.assertEqual(capturedOutput.getvalue(), "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.\n", "Console output is incorrect for non-defined modifiers.")
+		self.assertEqual(self.capturedOutput.getvalue(), "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.\n", "Console output is incorrect for non-defined modifiers.")
 		
 	# Only numbers in list
 	def test_convertPageList_numbersOnly(self):
@@ -196,7 +164,14 @@ class TestComicSpreadStitch(unittest.TestCase):
 	def test_convertPageList_deletionRange(self):
 		self.assertEqual(comicSpreadStitch.convertPageList("4,33-36d", "Test book directory"), [[4, ""], [33, "d"], [34, "d"], [35, "d"], [36, "d"]], "Should return each page from 33 to 36 inclusive for deletion, plus page 4 for stitching.")
 	
-	# findBookFile tests
+
+class TestFindBookFile(unittest.TestCase):
+	def setUp(self):
+		self.capturedOutput = io.StringIO()
+		sys.stdout = self.capturedOutput
+	
+	def tearDown(self):
+		sys.stdout = sys.__stdout__
 	
 	# Directory has no CBZ file
 	def test_findBookFile_noCBZ(self):
@@ -208,12 +183,9 @@ class TestComicSpreadStitch(unittest.TestCase):
 	def test_findBookFile_CBZOLD(self):
 		yesCBZOLD = os.path.join(os.path.dirname(__file__), "test-resources", "cbz-old")
 		os.chdir(yesCBZOLD)
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		file = comicSpreadStitch.findBookFile(False, False, False)
-		sys.stdout = sys.__stdout__
 		self.assertFalse(file, "{} should have a CBZ_OLD file.".format(yesCBZOLD))
-		self.assertEqual(capturedOutput.getvalue(),
+		self.assertEqual(self.capturedOutput.getvalue(),
 			"{} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the CBZ_OLD file or adding \"backedup\" as an option on the input.\n\n".format(yesCBZOLD),
 			"Console output is incorrect.")
 		
@@ -233,12 +205,9 @@ class TestComicSpreadStitch(unittest.TestCase):
 	def test_findBookFile_backedupCBZ(self):
 		correctFilesDir = os.path.join(os.path.dirname(__file__), "test-resources", "cbz")
 		os.chdir(correctFilesDir)
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
 		file = comicSpreadStitch.findBookFile(True, False, False)
-		sys.stdout = sys.__stdout__
 		self.assertFalse(file, "{} should not have a CBZ_OLD file.".format(correctFilesDir))
-		self.assertEqual(capturedOutput.getvalue(),
+		self.assertEqual(self.capturedOutput.getvalue(),
 			"{} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n\n".format(correctFilesDir),
 			"Console output is incorrect.")
 	
@@ -246,8 +215,8 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# TODO: add tests for PDFs
 	
-	# getBookFlags tests
-	
+
+class TestGetBookFlags(unittest.TestCase):
 	# No flags
 	def test_getBookFlags_noFlags(self):
 		self.assertEqual(comicSpreadStitch.getBookFlags([]), (False, False, False, False, False, False), "All flags should be false")
@@ -280,27 +249,30 @@ class TestComicSpreadStitch(unittest.TestCase):
 	def test_getBookFlags_mangaAndBackedup(self):
 		self.assertEqual(comicSpreadStitch.getBookFlags(["backedup", "manga"]), (True, True, False, False, False, False), "Manga and backedup flags should be true")
 	
-	# processPages tests
+
+class TestProcessPages(unittest.TestCase):
 	# The images used here are from https://github.com/mohammadimtiazz/standard-test-images-for-Image-Processing
+	
+	def setUp(self):
+		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
+		os.chdir(testImgDir)
+		self.baboon = cv2.imread("baboon.png")
+		self.boat = cv2.imread("boat.png")
+	
+	def tearDown(self):
+		# Restore original directory state
+		cv2.imwrite("baboon.png", self.baboon)
+		cv2.imwrite("boat.png", self.boat)
 	
 	# Stitch only
 	def test_processPages_stitchOnly(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("baboonboat.png")
-		baboon = cv2.imread("baboon.png")
-		boat = cv2.imread("boat.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], False, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match baboonboat.png
-		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
 		imgs = os.listdir()
 		processedImg = cv2.imread("baboon.png")
-		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		cv2.imwrite("boat.png", boat)
 		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
@@ -311,22 +283,13 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# Stitch back cover only
 	def test_processPages_stitchBackCoverOnly(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("boatbaboon.png")
-		baboon = cv2.imread("baboon.png")
-		boat = cv2.imread("boat.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], False, 50, 75)
 		
 		# By this point, baboon.png should still exist and boat.png should match boatbaboon.png
-		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
 		imgs = os.listdir()
 		processedImg = cv2.imread("boat.png")
-		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		cv2.imwrite("boat.png", boat)
 		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
@@ -337,40 +300,25 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# Rotate right only
 	def test_processPages_rotateRight(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("babooncw.png")
-		baboon = cv2.imread("baboon.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], False, 50, 75)
 		
 		# By this point, baboon.png should match babooncw.png
 		processedImg = cv2.imread("baboon.png")
 		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
 	
 	# Stitch and rotate right
 	def test_processPages_stitchRotateRight(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("baboonboatcw.png")
-		baboon = cv2.imread("baboon.png")
-		boat = cv2.imread("boat.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], False, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match baboonboatcw.png
-		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
 		imgs = os.listdir()
 		processedImg = cv2.imread("baboon.png")
-		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		cv2.imwrite("boat.png", boat)
 		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
@@ -381,40 +329,25 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# Rotate left only
 	def test_processPages_rotateLeft(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("baboonccw.png")
-		baboon = cv2.imread("baboon.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], False, 50, 75)
 		
 		# By this point, baboon.png should match baboonccw.png
 		processedImg = cv2.imread("baboon.png")
 		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
 	
 	# Stitch and rotate left
 	def test_processPages_stitchRotateLeft(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("baboonboatccw.png")
-		baboon = cv2.imread("baboon.png")
-		boat = cv2.imread("boat.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], False, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match baboonboatccw.png
-		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
 		imgs = os.listdir()
 		processedImg = cv2.imread("baboon.png")
-		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		cv2.imwrite("boat.png", boat)
 		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
@@ -425,39 +358,23 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# Delete
 	def test_processPages_delete(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
-		boat = cv2.imread("boat.png")
-		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], False, 50, 75)
 		
 		# By this point, boat.png should no longer exist; nothing else should be changed
 		imgs = os.listdir()
-		
-		# Restore original directory state
-		cv2.imwrite("boat.png", boat)
 		
 		# Check directory state
 		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
 	
 	# Stitch only in manga mode
 	def test_processPages_stitchOnlyManga(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("boatbaboon.png")
-		baboon = cv2.imread("baboon.png")
-		boat = cv2.imread("boat.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, ""]], True, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match boatbaboon.png
-		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
 		imgs = os.listdir()
 		processedImg = cv2.imread("baboon.png")
-		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		cv2.imwrite("boat.png", boat)
 		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
@@ -468,22 +385,13 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# Stitch back cover only in manga mode
 	def test_processPages_stitchBackCoverOnlyManga(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("baboonboat.png")
-		baboon = cv2.imread("baboon.png")
-		boat = cv2.imread("boat.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[0, ""]], True, 50, 75)
 		
 		# By this point, baboon.png should still exist and boat.png should match baboonboat.png
-		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
 		imgs = os.listdir()
 		processedImg = cv2.imread("boat.png")
-		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		cv2.imwrite("boat.png", boat)
 		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
@@ -494,40 +402,25 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# Rotate right only in manga mode
 	def test_processPages_rotateRightManga(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("babooncw.png")
-		baboon = cv2.imread("baboon.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "r"]], True, 50, 75)
 		
 		# By this point, baboon.png should match babooncw.png
 		processedImg = cv2.imread("baboon.png")
 		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
 	
 	# Stitch and rotate right in manga mode
 	def test_processPages_stitchRotateRightManga(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("boatbabooncw.png")
-		baboon = cv2.imread("baboon.png")
-		boat = cv2.imread("boat.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "s"]], True, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match boatbabooncw.png
-		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
 		imgs = os.listdir()
 		processedImg = cv2.imread("baboon.png")
-		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		cv2.imwrite("boat.png", boat)
 		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
@@ -538,40 +431,25 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# Rotate left only in manga mode
 	def test_processPages_rotateLeftManga(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("baboonccw.png")
-		baboon = cv2.imread("baboon.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "l"]], True, 50, 75)
 		
 		# By this point, baboon.png should match baboonccw.png
 		processedImg = cv2.imread("baboon.png")
 		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
 	
 	# Stitch and rotate left in manga mode
 	def test_processPages_stitchRotateLeftManga(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
 		testImg = cv2.imread("boatbaboonccw.png")
-		baboon = cv2.imread("baboon.png")
-		boat = cv2.imread("boat.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[1, "m"]], True, 50, 75)
 		
 		# By this point, boat.png should no longer exist and baboon.png should match boatbaboonccw.png
-		# Retrieving file list now but checking it later so that the directory will be restored to its original state even if an assertion fails
 		imgs = os.listdir()
 		processedImg = cv2.imread("baboon.png")
-		
-		# Restore original directory state
-		cv2.imwrite("baboon.png", baboon)
-		cv2.imwrite("boat.png", boat)
 		
 		# Compare output with testImg
 		self.assertTrue(processedImg.shape == testImg.shape and not(np.bitwise_xor(processedImg, testImg).any()), "Output image is incorrect")
@@ -582,23 +460,17 @@ class TestComicSpreadStitch(unittest.TestCase):
 	
 	# Delete in manga mode
 	def test_processPages_deleteManga(self):
-		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")
-		os.chdir(testImgDir)
-		boat = cv2.imread("boat.png")
 		
 		comicSpreadStitch.processPages(["baboon.png", "boat.png"], [[2, "d"]], True, 50, 75)
 		
 		# By this point, boat.png should no longer exist; nothing else should be changed
 		imgs = os.listdir()
 		
-		# Restore original directory state
-		cv2.imwrite("boat.png", boat)
-		
 		# Check directory state
 		self.assertFalse("boat.png" in imgs, "boat.png was not deleted")
 	
-	# stitchPages tests
-	
+
+class TestStitchPages(unittest.TestCase):
 	# Sanity with baboon.png
 	def test_stitchPages_baboonSanity(self):
 		testImgDir = os.path.join(os.path.dirname(__file__), "test-resources", "img")

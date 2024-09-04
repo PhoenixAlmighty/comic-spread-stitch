@@ -21,9 +21,7 @@ import shutil
 import io
 import sys
 
-class TestEpubToCbz(unittest.TestCase):
-	# getDocDir tests
-	
+class TestGetDocDir(unittest.TestCase):
 	# no document directory
 	def test_getDocDir_noDocDir(self):
 		yesCBZOLD = os.path.join(os.path.dirname(__file__), "test-resources", "cbz-old")
@@ -36,8 +34,8 @@ class TestEpubToCbz(unittest.TestCase):
 		os.chdir(extEpub)
 		self.assertEqual(epubToCbz.getDocDir(), "OEBPS", "extracted-epub should contain a document directory called OEBPS.")
 	
-	# findOpfFile tests
-	
+
+class TestFindOpfFile(unittest.TestCase):
 	# no OPF file
 	def test_findOpfFile_noOpfFile(self):
 		imageDir = os.path.join(os.path.dirname(__file__), "test-resources", "extracted-epub", "OEBPS", "images")
@@ -50,8 +48,8 @@ class TestEpubToCbz(unittest.TestCase):
 		os.chdir(docDir)
 		self.assertEqual(epubToCbz.findOpfFile(), "content.opf", "OEBPS should contain an OPF file called content.opf.")
 	
-	# getManifestAndSpine tests
-	
+
+class TestGetManifestAndSpine(unittest.TestCase):
 	# basic sanity test
 	def test_getManifestAndSpine_sanity(self):
 		docDir = os.path.join(os.path.dirname(__file__), "test-resources", "extracted-epub", "OEBPS")
@@ -63,8 +61,8 @@ class TestEpubToCbz(unittest.TestCase):
 		self.assertEqual(manifest, expectedManifest, "Manifest is not what was expected")
 		self.assertEqual(spine, expectedSpine, "Spine is not what was expected")
 	
-	# getImageFilenames tests
-	
+
+class TestGetImageFilenames(unittest.TestCase):
 	# basic sanity test
 	def test_getImageFilenames_sanity(self):
 		docDir = os.path.join(os.path.dirname(__file__), "test-resources", "extracted-epub", "OEBPS")
@@ -76,8 +74,9 @@ class TestEpubToCbz(unittest.TestCase):
 		self.assertEqual(imgs, expectedImgs, "Image list is not what was expected.")
 	
 	# not going to bother testing buildCbzFile, I already know it works and I'm not sure how to compare the content of 2 files in an assertion
-	
-	# getHtmlAttributeValue tests
+
+
+class TestFindHtmlAtttributeValue(unittest.TestCase):
 	# no negative tests, since I didn't put in any validation for this function
 	
 	# double quotes
@@ -92,8 +91,8 @@ class TestEpubToCbz(unittest.TestCase):
 		attr = "src"
 		self.assertEqual(epubToCbz.getHtmlAttributeValue(tag, attr), "images/cover.jpg", 'Return value should be "images/cover.jpg".')
 	
-	# findOpfEnterDoc tests
-	
+
+class TestFindOpfEnterDoc(unittest.TestCase):
 	# no document directory
 	def test_findOpfEnterDoc_noDocDir(self):
 		bookDir = os.path.join(os.path.dirname(__file__), "test-resources")

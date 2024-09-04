@@ -57,7 +57,6 @@ class TestProcessPdf(unittest.TestCase):
 		self.assertEqual(len(oldRead.pages) - 1, len(newRead.pages), "Backup file should have 1 page more than processed file")
 	
 	# last page turned clockwise
-	# error not caught: last page not rotated
 	def test_processPdf_lastPageCw(self):
 		processPdf.processPdf(self.book, [[3, "r"]], False, False)
 		oldRead = PdfReader(self.book + "_old")
@@ -65,7 +64,6 @@ class TestProcessPdf(unittest.TestCase):
 		self.assertEqual(len(oldRead.pages), len(newRead.pages), "Backup file and processed file should have same number of pages")
 	
 	# last page turned counterclockwise
-	# error not caught: last page not rotated
 	def test_processPdf_lastPageCcw(self):
 		processPdf.processPdf(self.book, [[3, "l"]], False, False)
 		oldRead = PdfReader(self.book + "_old")
