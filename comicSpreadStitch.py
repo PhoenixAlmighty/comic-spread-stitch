@@ -40,152 +40,154 @@ def main():
 		lines = pagesFile.readlines()
 	
 	for line in lines:
-		try:
-			bookDir = ""
-			parts = line.split("|")
-			bookDir = parts[0]
-			if not bookDirIsValid(bookDir):
-				skipped += 1
-				continue
-			manga, backedup, epub, pdf, rightlines, unknownFlag = getBookFlags(parts[2:])
-			pageNumbersNotPresent = (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2
-			
-			os.chdir(bookDir)
-			
-			bookFileType = ""
-			if epub:
-				bookFileType = "ePub"
-			elif pdf:
-				bookFileType = "PDF"
-			else:
-				bookFileType = "CBZ"
-			bookFileName = findBookFile(backedup, epub, pdf)
-			if bookFileName == "":
-				print("{} has no {} files in it. Check your input.".format(bookDir, bookFileType))
-			if not bookFileName:
-				skipped += 1
-				continue
-			
-			if pageNumbersNotPresent and epub:
-				epubToCbz.convertEpubToCbz(os.path.join(bookDir, bookFileName))
+		result = processBook(line, args.overlap, args.compression)
+		match result:
+			case 0:
 				processed += 1
-				continue
-			
-			if pageNumbersNotPresent and pdf:
-				print("Conversion from PDF to CBZ doesn't always work the way you want it to. If you want to try anyway, please use the pdfToCbz.py script. Just be sure to check the output afterwards.")
+			case 1:
 				skipped += 1
-				continue
-			
-			# This should not be reached if pageNumbersNotPresent and epub, as there is a continue statement in that if block			
-			if pageNumbersNotPresent and rightlines:
-				with ZipFile(bookFileName, 'r') as zip:
-					zip.extractall(path = tempPath)
-				os.chdir(tempPath)
-				imgList = getCbzImgs()
-				removeRightLines(imgList)
-				os.chdir(bookDir)
-				if not backedup:
-					os.rename(bookFileName, bookFileName + "_old")
-				with ZipFile(bookFileName, 'w') as newZip:
-					for file in imgList:
-						filePath = os.path.join(tempPath, file)
-						newZip.write(filePath, arcname = file)
-				shutil.rmtree(tempPath)
-				print("{} has had the right lines removed.".format(bookFileName))
-				processed += 1
-				continue
-			
-			if pageNumbersNotPresent:
-				print("The line for {} is missing page numbers.".format(bookDir.strip()))
-				skipped += 1
-				continue
-			if unknownFlag:
-				print("Unknown flag detected for {}. Skipping.".format(bookDir))
-				skipped += 1
-				continue
-		
-			# check for errors in input
-			pages = convertPageList(parts[1], bookDir)
-			if not pages:
-				skipped += 1
-				continue
-			
-			if pdf:
-				status = processPdf.processPdf(bookFileName, pages, manga, backedup)
-				if status:
-					skipped += 1
-					continue
-				else:
-					printSuccess(bookFileName, pages)
-					processed += 1
-					continue
-			
-			with ZipFile(bookFileName, 'r') as zip:
-				zip.extractall(path = tempPath)
-			
-			os.chdir(tempPath)
-			
-			imgList = []
-			if not epub:
-				imgList = getCbzImgs()
-			else:
-				docDir, opfFile = epubToCbz.findOpfEnterDoc(bookDir, tempPath)
-				if not opfFile:
-					skipped += 1
-					print("Skipping {} because the OPF file could not be found.".format(bookFileName))
-					continue
-				manifest, spine = epubToCbz.getManifestAndSpine(opfFile)
-				imgList = epubToCbz.getImageFilenames(manifest, spine)
-			
-			# imgList = os.listdir()
-			# # check to see if the image files are in a subdirectory and bring them out if so
-			# while os.path.isdir(imgList[0]):
-				# for file in os.listdir(imgList[0]):
-					# shutil.move(os.path.join(imgList[0], file), file)
-				# os.rmdir(imgList[0])
-				# imgList = os.listdir()
-			
-			# check whether imgList is long enough to account for all of pages
-			if (pages[-1][1] in ["l", "r", "d"] and len(imgList) < pages[-1][0]) or (not (pages[-1][1] in ["l", "r", "d"]) and len(imgList) < pages[-1][0] + 1):
-				print("{} skipped because the last page to process is past the end of the book.".format(bookDir))
-				skipped += 1
-				os.chdir(bookDir)
-				shutil.rmtree(tempPath)
-				continue
-			
-			if rightlines:
-				removeRightLines(imgList)
-			
-			imgList = processPages(imgList, pages, manga, args.overlap, args.compression)
-			
-			# this if statement may not be necessary given that processPages returns imgList
-			if not epub:
-				imgList = os.listdir()
-			os.chdir(bookDir)
-			if not backedup and not epub:
-				os.rename(bookFileName, bookFileName + "_old")
-			
-			# create new CBZ file with the combined pages
-			if epub:
-				epubToCbz.buildCbzFile(imgList, os.path.join(tempPath, docDir), bookFileName[:-4] + "cbz")
-			else:
-				with ZipFile(bookFileName, 'w') as newZip:
-					for file in imgList:
-						filePath = os.path.join(tempPath, file)
-						newZip.write(filePath, arcname = file)
-			
-			shutil.rmtree(tempPath)
-			
-			printSuccess(bookFileName, pages)
-			processed += 1
-		except Exception as err:
-			errors += 1
-			if bookDir == "":
-				print("Error occurred before book directory could be read in.\n", traceback.format_exc())
-			else:
-				print("Error occurred while processing {}.\n".format(bookDir), traceback.format_exc())
+			case 2:
+				errors += 1
+			case _:
+				print("Unexpected result for book")
 	
-	print("{} books processed, {} skipped, and {} errors. See output above for results.\n".format(processed, skipped, errors))
+	print(f"{processed} books processed, {skipped} skipped, and {errors} errors. See output above for results.\n")
+
+def processBook(line, overlap, compression):
+	try:
+		bookDir = ""
+		parts = line.split("|")
+		bookDir = parts[0]
+		if not bookDirIsValid(bookDir):
+			return 1
+		manga, backedup, epub, pdf, rightlines, unknownFlag = getBookFlags(parts[2:])
+		pageNumbersNotPresent = (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2
+
+		os.chdir(bookDir)
+
+		bookFileType = ""
+		if epub:
+			bookFileType = "ePub"
+		elif pdf:
+			bookFileType = "PDF"
+		else:
+			bookFileType = "CBZ"
+		bookFileName = findBookFile(backedup, epub, pdf)
+		if bookFileName == "":
+			print("{} has no {} files in it. Check your input.".format(bookDir, bookFileType))
+		if not bookFileName:
+			return 1
+
+		if pageNumbersNotPresent and epub:
+			epubToCbz.convertEpubToCbz(os.path.join(bookDir, bookFileName))
+			return 0
+
+		if pageNumbersNotPresent and pdf:
+			print(
+				"Conversion from PDF to CBZ doesn't always work the way you want it to. If you want to try anyway, please use the pdfToCbz.py script. Just be sure to check the output afterwards.")
+			return 1
+
+		# This should not be reached if pageNumbersNotPresent and epub, as there is a return statement in that if block
+		if pageNumbersNotPresent and rightlines:
+			with ZipFile(bookFileName, 'r') as zip:
+				zip.extractall(path=tempPath)
+			os.chdir(tempPath)
+			imgList = getCbzImgs()
+			removeRightLines(imgList)
+			os.chdir(bookDir)
+			if not backedup:
+				os.rename(bookFileName, bookFileName + "_old")
+			with ZipFile(bookFileName, 'w') as newZip:
+				for file in imgList:
+					filePath = os.path.join(tempPath, file)
+					newZip.write(filePath, arcname=file)
+			shutil.rmtree(tempPath)
+			print("{} has had the right lines removed.".format(bookFileName))
+			return 0
+
+		if pageNumbersNotPresent:
+			print("The line for {} is missing page numbers. Skipping.".format(bookDir.strip()))
+			return 1
+		if unknownFlag:
+			print("Unknown flag detected for {}. Skipping.".format(bookDir))
+			return 1
+
+		# check for errors in input
+		pages = convertPageList(parts[1], bookDir)
+		if not pages:
+			return 1
+
+		if pdf:
+			status = processPdf.processPdf(bookFileName, pages, manga, backedup)
+			if status:
+				return 1
+			else:
+				printSuccess(bookFileName, pages)
+				return 0
+
+		with ZipFile(bookFileName, 'r') as zip:
+			zip.extractall(path=tempPath)
+
+		os.chdir(tempPath)
+
+		imgList = []
+		if not epub:
+			imgList = getCbzImgs()
+		else:
+			docDir, opfFile = epubToCbz.findOpfEnterDoc(bookDir, tempPath)
+			if not opfFile:
+				print("Skipping {} because the OPF file could not be found.".format(bookFileName))
+				return 1
+			manifest, spine = epubToCbz.getManifestAndSpine(opfFile)
+			imgList = epubToCbz.getImageFilenames(manifest, spine)
+
+		# imgList = os.listdir()
+		# # check to see if the image files are in a subdirectory and bring them out if so
+		# while os.path.isdir(imgList[0]):
+		# for file in os.listdir(imgList[0]):
+		# shutil.move(os.path.join(imgList[0], file), file)
+		# os.rmdir(imgList[0])
+		# imgList = os.listdir()
+
+		# check whether imgList is long enough to account for all of pages
+		if (pages[-1][1] in ["l", "r", "d"] and len(imgList) < pages[-1][0]) or (
+				not (pages[-1][1] in ["l", "r", "d"]) and len(imgList) < pages[-1][0] + 1):
+			print("{} skipped because the last page to process is past the end of the book.".format(bookDir))
+			os.chdir(bookDir)
+			shutil.rmtree(tempPath)
+			return 1
+
+		if rightlines:
+			removeRightLines(imgList)
+
+		imgList = processPages(imgList, pages, manga, overlap, compression)
+
+		# this if statement may not be necessary given that processPages returns imgList
+		if not epub:
+			imgList = os.listdir()
+		os.chdir(bookDir)
+		if not backedup and not epub:
+			os.rename(bookFileName, bookFileName + "_old")
+
+		# create new CBZ file with the combined pages
+		if epub:
+			epubToCbz.buildCbzFile(imgList, os.path.join(tempPath, docDir), bookFileName[:-4] + "cbz")
+		else:
+			with ZipFile(bookFileName, 'w') as newZip:
+				for file in imgList:
+					filePath = os.path.join(tempPath, file)
+					newZip.write(filePath, arcname=file)
+
+		shutil.rmtree(tempPath)
+
+		printSuccess(bookFileName, pages)
+		return 0
+	except Exception as err:
+		if bookDir == "":
+			print("Error occurred before book directory could be read in.\n", traceback.format_exc())
+		else:
+			print("Error occurred while processing {}.\n".format(bookDir), traceback.format_exc())
+		return 2
 
 def processPages(imgList, pageList, manga, columns, compressionFuzz):
 	for page in pageList:
