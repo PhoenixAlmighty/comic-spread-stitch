@@ -16,7 +16,6 @@
 
 from zipfile import ZipFile
 import os
-import sys
 import shutil
 import argparse
 import math
@@ -29,12 +28,13 @@ def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("book", help = "The absolute file path of the ePub you want to convert to CBZ")
 	args = parser.parse_args()
-	convertEpubToCbz(args.book)
+	result, reason = convertEpubToCbz(args.book)
+	print(reason)
 	
 def convertEpubToCbz(book):
 	[root, ext] = os.path.splitext(book)
 	if ext.lower() != ".epub":
-		sys.exit("Provided file is not an ePub.")
+		return 1, f"{book} is not an ePub."
 	
 	bookDir = os.path.dirname(book)
 	bookEpub = os.path.basename(book)
@@ -46,7 +46,7 @@ def convertEpubToCbz(book):
 	os.chdir(tempPath)
 	docDir, opfFile = findOpfEnterDoc(bookDir, tempPath)
 	if not opfFile:
-		return
+		return 1, docDir
 	
 	# get manifest and spine from OPF file
 	manifest, spine = getManifestAndSpine(opfFile)
@@ -64,7 +64,7 @@ def convertEpubToCbz(book):
 	# clean up
 	shutil.rmtree(tempPath)
 	
-	print("{} converted to CBZ.".format(bookEpub))
+	return 0, f"{bookEpub} converted to CBZ."
 
 # working directory should be in the extracted ePub directory before this is called
 def getDocDir():
@@ -152,19 +152,17 @@ def findOpfEnterDoc(bookDir, tempPath):
 		# find and enter the document folder
 		docDir = getDocDir()
 		if not docDir:
-			print("Provided ePub has no document directory.")
 			os.chdir(bookDir)
 			shutil.rmtree(tempPath)
-			return False, False
+			return "Provided ePub has no document directory.", False
 		os.chdir(docDir)
 	
 		# find the OPF file
 		opfFile = findOpfFile()
 		if not opfFile:
-			print("Provided ePub has no OPF file.")
 			os.chdir(bookDir)
 			shutil.rmtree(tempPath)
-			return False, False
+			return "Provided ePub has no OPF file.", False
 	
 	return docDir, opfFile
 

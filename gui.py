@@ -17,6 +17,8 @@
 import tkinter as tk
 from tkinter import filedialog
 import tkinter.ttk as ttk
+import comicSpreadStitch
+import os
 
 def main():
     # choose file to process
@@ -35,8 +37,34 @@ def main():
 
     # process the file
     def process():
-        pages = ent_pages.get()
-        lbl_results["text"] = pages
+        lbl_results["text"] = "Working..."
+        filepath = ent_filepath.get()
+        if not filepath:
+            lbl_results["text"] = "No file entered"
+            return
+        name, ext = os.path.splitext(filepath)
+        # first part of line needs to be directory the book file is in
+        # get this from os.path.split()
+        # second part of line needs to be list of pages
+        line = f"{os.path.split(name)[0]}|{ent_pages.get()}"
+        match ext:
+            case ".epub":
+                line += "|epub"
+            case ".pdf":
+                line += "|pdf"
+            case ".cbz":
+                pass
+            case _:
+                lbl_results["text"] = "Unsupported file type"
+                return
+        if manga.get() == "1":
+            line += "|manga"
+        if rightlines.get() == "1":
+            line += "|rightlines"
+        if backedup.get() == "1":
+            line += "|backedup"
+        result, reason = comicSpreadStitch.processBook(line)
+        lbl_results["text"] = reason
 
     window = tk.Tk()
     window.title("Comic Spread Stitch")
@@ -53,8 +81,17 @@ def main():
     # label to show the results of the processing
     lbl_results = ttk.Label(text = "Click Process button to see results")
 
-    # would be nice:
-        # progress bar
+    # manga checkbox
+    manga = tk.StringVar()
+    cb_manga = ttk.Checkbutton(text = "Manga", variable = manga)
+    # rightlines checkbox
+    rightlines = tk.StringVar()
+    cb_rightlines = ttk.Checkbutton(text = "Remove right lines", variable = rightlines)
+    # backedup checkbox
+    backedup = tk.StringVar()
+    cb_backedup = ttk.Checkbutton(text = "Backed up", variable = backedup)
+
+    # a progress bar would be nice, though it might have to wait until I allow multiple books at once in the GUI
 
     # put widgets into window
     lbl_filepath.grid(row = 0, column = 0, sticky = "e")
@@ -63,7 +100,10 @@ def main():
     lbl_pages.grid(row = 1, column = 0, sticky = "e")
     ent_pages.grid(row = 1, column = 1)
     btn_process.grid(row = 1, column = 2)
-    lbl_results.grid(row = 2, column = 1)
+    cb_manga.grid(row = 2, column = 0)
+    cb_rightlines.grid(row = 2, column = 1)
+    cb_backedup.grid(row = 2, column = 2)
+    lbl_results.grid(row = 3, column = 1)
 
     window.mainloop()
 

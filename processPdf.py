@@ -29,7 +29,11 @@ def main():
 	parser.add_argument("-b", "--backedup", dest = "backedup", action = "store_true", help = "Add this switch if the book already has a backup")
 	args = parser.parse_args()
 	pageList = ast.literal_eval(args.pageList)
-	processPdf(args.book, pageList, args.manga, args.backedup)
+	status, reason = processPdf(args.book, pageList, args.manga, args.backedup)
+	if not status:
+		print(f"{args.book} successfully processed.")
+	else:
+		print(reason)
 
 def processPdf(book, pageList, manga, backedup):
 	# read source PDF
@@ -37,8 +41,7 @@ def processPdf(book, pageList, manga, backedup):
 	
 	# check whether reader.pages is long enough to cover the last page in pagesList
 	if (pageList[-1][1] in ["l", "r", "d"] and len(reader.pages) < pageList[-1][0]) or (not (pageList[-1][1] in ["l", "r", "d"]) and len(reader.pages) < pageList[-1][0] + 1):
-		print("{} skipped because the last page to process is past the end of the book.".format(book))
-		return 1
+		return 1, f"{book} skipped because the last page to process is past the end of the book."
 	
 	#check whether back cover needs to be altered
 	backcover = False
@@ -103,14 +106,13 @@ def processPdf(book, pageList, manga, backedup):
 		try:
 			os.rename(book, book + "_old")
 		except PermissionError as permErr:
-			print("{} is open in another program. Close it and run the script again.".format(book))
-			return 1
+			return 1, f"{book} is open in another program. Close it and run the script again."
 	
 	# write file
 	with open(book, "wb") as fp:
 		writer.write(fp)
 	
-	return 0
+	return 0, ""
 
 def processPage(reader, writer, pageNum, op, manga):
 	# delete page by not adding it to the destination PDF

@@ -40,7 +40,7 @@ def main():
 		lines = pagesFile.readlines()
 	
 	for line in lines:
-		result = processBook(line, args.overlap, args.compression)
+		result, reason = processBook(line, args.overlap, args.compression)
 		match result:
 			case 0:
 				processed += 1
@@ -50,16 +50,18 @@ def main():
 				errors += 1
 			case _:
 				print("Unexpected result for book")
+		print(reason)
 	
 	print(f"{processed} books processed, {skipped} skipped, and {errors} errors. See output above for results.\n")
 
-def processBook(line, overlap, compression):
+def processBook(line, overlap = 50, compression = 75):
 	try:
 		bookDir = ""
 		parts = line.split("|")
 		bookDir = parts[0]
-		if not bookDirIsValid(bookDir):
-			return 1
+		validBookDir, reason = bookDirIsValid(bookDir)
+		if not validBookDir:
+			return 1, reason
 		manga, backedup, epub, pdf, rightlines, unknownFlag = getBookFlags(parts[2:])
 		pageNumbersNotPresent = (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2
 
@@ -72,20 +74,17 @@ def processBook(line, overlap, compression):
 			bookFileType = "PDF"
 		else:
 			bookFileType = "CBZ"
-		bookFileName = findBookFile(backedup, epub, pdf)
+		validBookFile, bookFileName = findBookFile(backedup, epub, pdf)
 		if bookFileName == "":
-			print("{} has no {} files in it. Check your input.".format(bookDir, bookFileType))
-		if not bookFileName:
-			return 1
+			bookFileName = f"{bookDir} has no {bookFileType} files in it. Check your input."
+		if not validBookFile:
+			return 1, bookFileName
 
 		if pageNumbersNotPresent and epub:
-			epubToCbz.convertEpubToCbz(os.path.join(bookDir, bookFileName))
-			return 0
+			return epubToCbz.convertEpubToCbz(os.path.join(bookDir, bookFileName))
 
 		if pageNumbersNotPresent and pdf:
-			print(
-				"Conversion from PDF to CBZ doesn't always work the way you want it to. If you want to try anyway, please use the pdfToCbz.py script. Just be sure to check the output afterwards.")
-			return 1
+			return 1, f"Skipping {bookFileName} because conversion from PDF to CBZ doesn't always work the way you want it to. If you want to try anyway, please use the pdfToCbz.py script. Just be sure to check the output afterwards."
 
 		# This should not be reached if pageNumbersNotPresent and epub, as there is a return statement in that if block
 		if pageNumbersNotPresent and rightlines:
@@ -102,28 +101,24 @@ def processBook(line, overlap, compression):
 					filePath = os.path.join(tempPath, file)
 					newZip.write(filePath, arcname=file)
 			shutil.rmtree(tempPath)
-			print("{} has had the right lines removed.".format(bookFileName))
-			return 0
+			return 0, f"{bookFileName} has had the right lines removed."
 
 		if pageNumbersNotPresent:
-			print("The line for {} is missing page numbers. Skipping.".format(bookDir.strip()))
-			return 1
+			return 1, f"The line for {bookDir.strip()} is missing page numbers. Skipping."
 		if unknownFlag:
-			print("Unknown flag detected for {}. Skipping.".format(bookDir))
-			return 1
+			return 1, f"Unknown flag detected for {bookDir}. Skipping."
 
 		# check for errors in input
-		pages = convertPageList(parts[1], bookDir)
+		pages, reason = convertPageList(parts[1], bookDir)
 		if not pages:
-			return 1
+			return 1, reason
 
 		if pdf:
-			status = processPdf.processPdf(bookFileName, pages, manga, backedup)
+			status, reason = processPdf.processPdf(bookFileName, pages, manga, backedup)
 			if status:
-				return 1
+				return status, reason
 			else:
-				printSuccess(bookFileName, pages)
-				return 0
+				return 0, getResultString(bookFileName, pages)
 
 		with ZipFile(bookFileName, 'r') as zip:
 			zip.extractall(path=tempPath)
@@ -136,8 +131,7 @@ def processBook(line, overlap, compression):
 		else:
 			docDir, opfFile = epubToCbz.findOpfEnterDoc(bookDir, tempPath)
 			if not opfFile:
-				print("Skipping {} because the OPF file could not be found.".format(bookFileName))
-				return 1
+				return 1, f"Skipping {bookFileName} because the OPF file could not be found."
 			manifest, spine = epubToCbz.getManifestAndSpine(opfFile)
 			imgList = epubToCbz.getImageFilenames(manifest, spine)
 
@@ -152,10 +146,9 @@ def processBook(line, overlap, compression):
 		# check whether imgList is long enough to account for all of pages
 		if (pages[-1][1] in ["l", "r", "d"] and len(imgList) < pages[-1][0]) or (
 				not (pages[-1][1] in ["l", "r", "d"]) and len(imgList) < pages[-1][0] + 1):
-			print("{} skipped because the last page to process is past the end of the book.".format(bookDir))
 			os.chdir(bookDir)
 			shutil.rmtree(tempPath)
-			return 1
+			return 1, f"{bookDir} skipped because the last page to process is past the end of the book."
 
 		if rightlines:
 			removeRightLines(imgList)
@@ -180,14 +173,14 @@ def processBook(line, overlap, compression):
 
 		shutil.rmtree(tempPath)
 
-		printSuccess(bookFileName, pages)
-		return 0
+		return 0, getResultString(bookFileName, pages)
+
 	except Exception as err:
 		if bookDir == "":
-			print("Error occurred before book directory could be read in.\n", traceback.format_exc())
+			reason = f"Error occurred before book directory could be read in.\n{traceback.format_exc()}"
 		else:
-			print("Error occurred while processing {}.\n".format(bookDir), traceback.format_exc())
-		return 2
+			reason = f"Error occurred while processing {bookDir}.\n{traceback.format_exc()}"
+		return 2, reason
 
 def processPages(imgList, pageList, manga, columns, compressionFuzz):
 	for page in pageList:
@@ -264,7 +257,7 @@ def stitchPages(leftImg, rightImg, columns, compressionFuzz):
 		else:
 			return cv2.hconcat([leftImg, rightImg])
 
-def printSuccess(bookFileName, pagesList):
+def getResultString(bookFileName, pagesList):
 	pagesString = ""
 	pagesDeleted = 0
 	modifiedPagesList = []
@@ -283,8 +276,7 @@ def printSuccess(bookFileName, pagesList):
 	pagesModified = len(modifiedPagesList)
 	
 	if pagesModified == 0:
-		print("{} has had {} pages deleted.".format(bookFileName, pagesDeleted))
-		return
+		return f"{bookFileName} has had {pagesDeleted} pages deleted."
 	
 	if modifiedPagesList[0] == 0:
 		
@@ -300,11 +292,11 @@ def printSuccess(bookFileName, pagesList):
 	
 	# 1 non-back cover page
 	if pagesModified == 1:
-		pagesString += "page {}".format(modifiedPagesList[0])
+		pagesString += f"page {modifiedPagesList[0]}"
 	
 	# 2 non-back cover pages
 	elif pagesModified == 2:
-		pagesString += "pages {} and {}".format(modifiedPagesList[0], modifiedPagesList[1])
+		pagesString += f"pages {modifiedPagesList[0]} and {modifiedPagesList[1]}"
 	
 	# More than 2 non-back cover pages
 	elif pagesModified > 2:
@@ -313,33 +305,30 @@ def printSuccess(bookFileName, pagesList):
 			
 			# Last page
 			if i == pagesModified - 1:
-				pagesString += "{}".format(modifiedPagesList[i])
+				pagesString += str(modifiedPagesList[i])
 			
 			# Second to last page
 			elif i == pagesModified - 2:
-				pagesString += "{}, and ".format(modifiedPagesList[i])
+				pagesString += f"{modifiedPagesList[i]}, and "
 			
 			# At least 2 pages remaining
 			else:
-				pagesString += "{}, ".format(modifiedPagesList[i])
+				pagesString += f"{modifiedPagesList[i]}, "
 	
-	print("{} successfully altered on {}.".format(bookFileName, pagesString))
+	return f"{bookFileName} successfully altered on {pagesString}."
 
 def bookDirIsValid(bookDir):
 	if bookDir == "":
-		print("No book directory on this line. Check your input.")
-		return False
+		return False, "No book directory on this line. Check your input."
 	elif not os.path.exists(bookDir):
-		print(bookDir + " does not exist. Check your filepath.")
-		return False
+		return False, f"{bookDir} does not exist. Check your filepath."
 	
-	return True
+	return True, ""
 
 def convertPageList(pageString, bookDir):
 	# validate that input has pages to combine
 	if pageString == "":
-		print("{} has no pages to combine. Check your input.".format(bookDir))
-		return False
+		return False, f"{bookDir} has no pages to combine. Check your input."
 	
 	# add pages to list of ints while validating that each page has a number and, if any modifiers, ones that match what's defined
 	pageStringList = pageString.split(",")
@@ -349,8 +338,7 @@ def convertPageList(pageString, bookDir):
 		lastChar = page[-1]
 		if not lastChar.isdigit():
 			if not lastChar in ["r", "s", "l", "m", "d"]:
-				print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.".format(bookDir))
-				return False
+				return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
 			page = page[:-1]
 		else:
 			lastChar = ""
@@ -361,24 +349,21 @@ def convertPageList(pageString, bookDir):
 				rangePages = page.split("-")
 				for rangePage in rangePages:
 					if not rangePage.isdigit():
-						print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.".format(bookDir))
-						return False
+						return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
 				for i in range(int(rangePages[0]), int(rangePages[1]) + 1):
 					pageIntList.append([i, "d"])
 			elif page.isdigit():
 				pageIntList.append([int(page), lastChar])
 			else:
-				print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.".format(bookDir))
-				return False
+				return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
 		elif not page.isdigit():
-			print("Page list for {} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.".format(bookDir))
-			return False
+			return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
 		else:
 			pageIntList.append([int(page), lastChar])
 	
 	pageIntList.sort()
 	
-	return pageIntList
+	return pageIntList, ""
 
 def findBookFile(backedup, epub, pdf):
 	bookFiles = os.listdir()
@@ -404,8 +389,7 @@ def findBookFile(backedup, epub, pdf):
 			if extension == ext:
 				bookFileName = file
 			if extension == backupExt:
-				print("{} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the {}_OLD file or adding \"backedup\" as an option on the input.\n".format(os.getcwd(), upperExt))
-				return False
+				return False, f"{os.getcwd()} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the {upperExt}_OLD file or adding \"backedup\" as an option on the input.\n"
 		else:
 			if extension == ext:
 				bookFileName = file
@@ -413,10 +397,12 @@ def findBookFile(backedup, epub, pdf):
 				backupFound = True
 	
 	if backedup and not backupFound:
-		print("{} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n".format(os.getcwd()))
-		return False
+		return False, f"{os.getcwd()} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n"
+
+	if bookFileName == "":
+		return False, ""
 	
-	return bookFileName
+	return True, bookFileName
 
 def getBookFlags(flags):
 	manga = False

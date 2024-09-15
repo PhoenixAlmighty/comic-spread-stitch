@@ -93,56 +93,42 @@ class TestFindHtmlAtttributeValue(unittest.TestCase):
 	
 
 class TestFindOpfEnterDoc(unittest.TestCase):
+	# setup
+	def setUp(self):
+		self.bookDir = os.path.join(os.path.dirname(__file__), "test-resources")
+		self.tempPath = "temp"
+		os.chdir(self.bookDir)
+
 	# no document directory
 	def test_findOpfEnterDoc_noDocDir(self):
-		bookDir = os.path.join(os.path.dirname(__file__), "test-resources")
-		tempPath = "temp"
-		os.chdir(bookDir)
-		if not os.path.exists(tempPath):
-			os.mkdir(tempPath)
-		os.chdir(os.path.join(os.path.dirname(__file__), "test-resources", "cbz"))
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
-		docDir, opfFile = epubToCbz.findOpfEnterDoc(bookDir, tempPath)
-		sys.stdout = sys.__stdout__
-		self.assertFalse(docDir, "docDir should be False.")
+		if not os.path.exists(self.tempPath):
+			os.mkdir(self.tempPath)
+		os.chdir(os.path.join(self.bookDir, "cbz"))
+		docDir, opfFile = epubToCbz.findOpfEnterDoc(self.bookDir, self.tempPath)
+		self.assertEqual(docDir, "Provided ePub has no document directory.", "docDir should be \"Provided ePub has no document directory.\".")
 		self.assertFalse(opfFile, "opfFile should be False.")
-		self.assertEqual(capturedOutput.getvalue(), "Provided ePub has no document directory.\n", "Console output is incorrect for no document directory.")
-		self.assertFalse(tempPath in os.listdir(), "test-resources should no longer contain the temp directory.")
+		self.assertFalse(self.tempPath in os.listdir(), "test-resources should no longer contain the temp directory.")
 	
 	# no OPF file
 	def test_findOpfEnterDoc_noOpfFile(self):
-		bookDir = os.path.join(os.path.dirname(__file__), "test-resources")
-		tempPath = "temp"
-		os.chdir(bookDir)
-		if not os.path.exists(tempPath):
-			os.mkdir(tempPath)
-		capturedOutput = io.StringIO()
-		sys.stdout = capturedOutput
-		docDir, opfFile = epubToCbz.findOpfEnterDoc(bookDir, tempPath)
-		sys.stdout = sys.__stdout__
-		self.assertFalse(docDir, "docDir should be False.")
+		if not os.path.exists(self.tempPath):
+			os.mkdir(self.tempPath)
+		docDir, opfFile = epubToCbz.findOpfEnterDoc(self.bookDir, self.tempPath)
+		self.assertEqual(docDir, "Provided ePub has no OPF file.", "docDir should be \"Provided ePub has no OPF file.\".")
 		self.assertFalse(opfFile, "opfFile should be False.")
-		self.assertEqual(capturedOutput.getvalue(), "Provided ePub has no OPF file.\n", "Console output is incorrect for no document directory.")
-		self.assertFalse(tempPath in os.listdir(), "test-resources should no longer contain the temp directory.")
+		self.assertFalse(self.tempPath in os.listdir(), "test-resources should no longer contain the temp directory.")
 	
 	# OPF file in top-level directory
 	def test_findOpfEnterDoc_opfFileInTop(self):
-		bookDir = os.path.join(os.path.dirname(__file__), "test-resources")
-		tempPath = "temp"
-		os.chdir(bookDir)
-		os.chdir(os.path.join(os.path.dirname(__file__), "test-resources", "extracted-epub", "OEBPS"))
-		docDir, opfFile = epubToCbz.findOpfEnterDoc(bookDir, tempPath)
+		os.chdir(os.path.join(self.bookDir, "extracted-epub", "OEBPS"))
+		docDir, opfFile = epubToCbz.findOpfEnterDoc(self.bookDir, self.tempPath)
 		self.assertEqual(docDir, "", "docDir should be an empty string.")
 		self.assertEqual(opfFile, "content.opf", "opfFile should be content.opf.")
 	
 	# OPF file one level down from top-level directory
 	def test_findOpfEnterDoc_opfFileOneDown(self):
-		bookDir = os.path.join(os.path.dirname(__file__), "test-resources")
-		tempPath = "temp"
-		os.chdir(bookDir)
-		os.chdir(os.path.join(os.path.dirname(__file__), "test-resources", "extracted-epub"))
-		docDir, opfFile = epubToCbz.findOpfEnterDoc(bookDir, tempPath)
+		os.chdir(os.path.join(self.bookDir, "extracted-epub"))
+		docDir, opfFile = epubToCbz.findOpfEnterDoc(self.bookDir, self.tempPath)
 		self.assertEqual(docDir, "OEBPS", "docDir should be OEBPS.")
 		self.assertEqual(opfFile, "content.opf", "opfFile should be content.opf.")
 

@@ -22,193 +22,209 @@ import sys
 import numpy as np
 import cv2
 
-class TestPrintSuccess(unittest.TestCase):
-	def setUp(self):
-		self.capturedOutput = io.StringIO()
-		sys.stdout = self.capturedOutput
-	
-	def tearDown(self):
-		sys.stdout = sys.__stdout__
-	
+class TestGetResultString(unittest.TestCase):
 	# Back cover only
-	def test_printSuccess_backCoverOnly(self):
-		comicSpreadStitch.printSuccess("Test book", [[0, ""]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on the back cover.\n", "Console output is wrong for back cover only.")
+	def test_getResultString_backCoverOnly(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[0, ""]])
+		self.assertEqual(resultString,
+						 "Test book successfully altered on the back cover.",
+						 "Console output is wrong for back cover only.")
 		
 	# Back cover + 1 spread
-	def test_printSuccess_backCoverOneSpread(self):
-		comicSpreadStitch.printSuccess("Test book", [[0, ""], [2, ""]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on the back cover and page 2.\n", "Console output is wrong for back cover plus 1 spread.")
+	def test_getResultString_backCoverOneSpread(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[0, ""], [2, ""]])
+		self.assertEqual(resultString,
+						 "Test book successfully altered on the back cover and page 2.",
+						 "Console output is wrong for back cover plus 1 spread.")
 		
 	# Back cover + 2 spreads
-	def test_printSuccess_backCoverTwoSpreads(self):
-		comicSpreadStitch.printSuccess("Test book", [[0, ""], [2, ""], [4, ""]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on the back cover and pages 2 and 3.\n", "Console output is wrong for back cover plus 2 spreads.")
+	def test_getResultString_backCoverTwoSpreads(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[0, ""], [2, ""], [4, ""]])
+		self.assertEqual(resultString,
+						 "Test book successfully altered on the back cover and pages 2 and 3.",
+						 "Console output is wrong for back cover plus 2 spreads.")
 		
 	# Back cover + 3 or more spreads
-	def test_printSuccess_backCoverThreeSpreads(self):
-		comicSpreadStitch.printSuccess("Test book", [[0, ""], [2, ""], [4, ""], [6, ""]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on the back cover and pages 2, 3, and 4.\n", "Console output is wrong for back cover plus 3 spreads.")
+	def test_getResultString_backCoverThreeSpreads(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[0, ""], [2, ""], [4, ""], [6, ""]])
+		self.assertEqual(resultString,
+						 "Test book successfully altered on the back cover and pages 2, 3, and 4.",
+						 "Console output is wrong for back cover plus 3 spreads.")
 		
 	# 1 spread
-	def test_printSuccess_oneSpread(self):
-		comicSpreadStitch.printSuccess("Test book", [[2, ""]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on page 2.\n", "Console output is wrong for 1 spread.")
+	def test_getResultString_oneSpread(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""]])
+		self.assertEqual(resultString,
+						 "Test book successfully altered on page 2.",
+						 "Console output is wrong for 1 spread.")
 		
 	# 2 spreads
-	def test_printSuccess_twoSpreads(self):
-		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, ""]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 2 and 3.\n", "Console output is wrong for 2 spreads.")
+	def test_getResultString_twoSpreads(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""], [4, ""]])
+		self.assertEqual(resultString,
+						 "Test book successfully altered on pages 2 and 3.",
+						 "Console output is wrong for 2 spreads.")
 		
 	# 3 or more spreads
-	def test_printSuccess_threeSpreads(self):
-		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, ""], [6, ""]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, and 4.\n", "Console output is wrong for 3 spreads.")
+	def test_getResultString_threeSpreads(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""], [4, ""], [6, ""]])
+		self.assertEqual(resultString,
+						 "Test book successfully altered on pages 2, 3, and 4.",
+						 "Console output is wrong for 3 spreads.")
 		
 	# 1 rotation followed by 1 spread
-	def test_printSuccess_rotationThenSpread(self):
-		comicSpreadStitch.printSuccess("Test book", [[4, "l"], [6, ""]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 4 and 6.\n", "Console output is wrong for 2 spreads and 1 rotation.")
+	def test_getResultString_rotationThenSpread(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[4, "l"], [6, ""]])
+		self.assertEqual(resultString,
+						 "Test book successfully altered on pages 4 and 6.",
+						 "Console output is wrong for 2 spreads and 1 rotation.")
 		
 	# 2 spreads, 1 rotation
-	def test_printSuccess_twoSpreadsOneRotation(self):
-		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, "l"], [6, ""]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, and 5.\n", "Console output is wrong for 2 spreads and 1 rotation.")
+	def test_getResultString_twoSpreadsOneRotation(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""], [4, "l"], [6, ""]])
+		self.assertEqual(resultString,
+						 "Test book successfully altered on pages 2, 3, and 5.",
+						 "Console output is wrong for 2 spreads and 1 rotation.")
 		
 	# 3 spreads, 1 of which is rotated
-	def test_printSuccess_threeSpreadsOneRotated(self):
-		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, "m"], [6, ""]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, and 4.\n", "Console output is wrong for 3 spreads, 1 of which has been rotated.")
+	def test_getResultString_threeSpreadsOneRotated(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""], [4, "m"], [6, ""]])
+		self.assertEqual(resultString,
+						 "Test book successfully altered on pages 2, 3, and 4.",
+						 "Console output is wrong for 3 spreads, 1 of which has been rotated.")
 	
 	# 3 page deletions, no modifications
-	def test_printSuccess_threeDeletions(self):
-		comicSpreadStitch.printSuccess("Test book", [[2, "d"], [4, "d"], [6, "d"]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book has had 3 pages deleted.\n", "Console output is wrong for 3 page deletions and no page modifications.")
+	def test_getResultString_threeDeletions(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[2, "d"], [4, "d"], [6, "d"]])
+		self.assertEqual(resultString,
+						 "Test book has had 3 pages deleted.",
+						 "Console output is wrong for 3 page deletions and no page modifications.")
 		
 	# Check that all modifiers are handled correctly
-	def test_printSuccess_allModifiers(self):
-		comicSpreadStitch.printSuccess("Test book", [[2, ""], [4, "m"], [6, "l"], [8, "r"], [10, "s"], [12, "d"], [14, ""]])
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book successfully altered on pages 2, 3, 4, 6, 8, and 10.\n", "At least one modifier has been handled incorrectly.")
+	def test_getResultString_allModifiers(self):
+		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""], [4, "m"], [6, "l"], [8, "r"], [10, "s"], [12, "d"], [14, ""]])
+		self.assertEqual(resultString,
+						 "Test book successfully altered on pages 2, 3, 4, 6, 8, and 10.",
+						 "At least one modifier has been handled incorrectly.")
 	
 
 class TestBookDirIsValid(unittest.TestCase):
-	def setUp(self):
-		self.capturedOutput = io.StringIO()
-		sys.stdout = self.capturedOutput
-	
-	def tearDown(self):
-		sys.stdout = sys.__stdout__
-	
 	# No book directory
 	def test_bookDirIsValid_noDirectory(self):
-		validity = comicSpreadStitch.bookDirIsValid("")
+		validity, reason = comicSpreadStitch.bookDirIsValid("")
 		self.assertFalse(validity, "Empty string for book directory should return false.")
-		self.assertEqual(self.capturedOutput.getvalue(), "No book directory on this line. Check your input.\n", "Console output is incorrect for empty string input as book directory.")
+		self.assertEqual(reason,
+						 "No book directory on this line. Check your input.",
+						 "Console output is incorrect for empty string input as book directory.")
 		
 	# Book directory that doesn't exist on my computer
 	def test_bookDirIsValid_nonexistentDirectory(self):
 		nonexistentDir = "D:\Calibre Library\Erik Larsen\Savage Dragon #179 (1429)"
-		validity = comicSpreadStitch.bookDirIsValid(nonexistentDir)
+		validity, reason = comicSpreadStitch.bookDirIsValid(nonexistentDir)
 		self.assertFalse(validity, "Book directory that doesn't exist on this computer should return false.")
-		self.assertEqual(self.capturedOutput.getvalue(), "{} does not exist. Check your filepath.\n".format(nonexistentDir), "Console output is incorrect for nonexistent book directory.")
+		self.assertEqual(reason,
+						 f"{nonexistentDir} does not exist. Check your filepath.",
+						 "Console output is incorrect for nonexistent book directory.")
 		
 	# Book directory that does exist on my computer
 	def test_bookDirIsValid_realDirectory(self):
 		realBookDir = "D:\Calibre Library\Erik Larsen\Savage Dragon #179 (1428)"
-		self.assertTrue(comicSpreadStitch.bookDirIsValid(realBookDir), "Directory that exists should return true.")
+		self.assertEqual(comicSpreadStitch.bookDirIsValid(realBookDir), (True, ""), "Directory that exists should return true.")
 	
 
 class TestConvertPageList(unittest.TestCase):
-	def setUp(self):
-		self.capturedOutput = io.StringIO()
-		sys.stdout = self.capturedOutput
-	
-	def tearDown(self):
-		sys.stdout = sys.__stdout__
-	
 	# No pages
 	def test_convertPageList_noPages(self):
-		pageList = comicSpreadStitch.convertPageList("", "Test book directory")
+		pageList, reason = comicSpreadStitch.convertPageList("", "Test book directory")
 		self.assertFalse(pageList, "Should return False if string is empty.")
-		self.assertEqual(self.capturedOutput.getvalue(), "Test book directory has no pages to combine. Check your input.\n", "Console output is incorrect for empty page list.")
+		self.assertEqual(reason,
+						 "Test book directory has no pages to combine. Check your input.",
+						 "Reason is incorrect for empty page list.")
 		
 	# Letters in list that aren't attached to numbers
 	def test_convertPageList_lonelyLetters(self):
-		pageList = comicSpreadStitch.convertPageList("1,2,a", "Test book directory")
+		pageList, reason = comicSpreadStitch.convertPageList("1,2,a", "Test book directory")
 		self.assertFalse(pageList, "Should return False if string contains letters that aren't attached to numbers.")
-		self.assertEqual(self.capturedOutput.getvalue(), "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.\n", "Console output is incorrect for non-numeric page list.")
+		self.assertEqual(reason,
+						 "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.",
+						 "Reason is incorrect for non-numeric page list.")
 		
 	# Letters in list that don't match the defined modifiers
 	def test_convertPageList_wrongModifiers(self):
-		pageList = comicSpreadStitch.convertPageList("1,2,3a", "Test book directory")
+		pageList, reason = comicSpreadStitch.convertPageList("1,2,3a", "Test book directory")
 		self.assertFalse(pageList, "Should return False if string contains letters that aren't attached to numbers.")
-		self.assertEqual(self.capturedOutput.getvalue(), "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.\n", "Console output is incorrect for non-defined modifiers.")
+		self.assertEqual(reason,
+						 "Page list for Test book directory contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input.",
+						 "Console output is incorrect for non-defined modifiers.")
 		
 	# Only numbers in list
 	def test_convertPageList_numbersOnly(self):
-		self.assertEqual(comicSpreadStitch.convertPageList("5,3,7", "Test book directory"), [[3, ""], [5, ""], [7, ""]], "Should return a sorted list of lists, where each list is an integer followed by an empty string.")
+		self.assertEqual(comicSpreadStitch.convertPageList("5,3,7", "Test book directory"),
+						 ([[3, ""], [5, ""], [7, ""]], "",),
+						 "Should return a tuple where the first element is a sorted list of lists, where each list is an integer followed by an empty string, and the second tuple element is an empty string.")
 		
 	# Only numbers and spaces in list
 	def test_convertPageList_numbersAndSpaces(self):
-		self.assertEqual(comicSpreadStitch.convertPageList("5, 3, 7 ", "Test book directory"), [[3, ""], [5, ""], [7, ""]], "Should return a sorted list of lists, where each list is an integer followed by an empty string, without the whitespace triggering a return value of False.")
+		self.assertEqual(comicSpreadStitch.convertPageList("5, 3, 7 ", "Test book directory"),
+						 ([[3, ""], [5, ""], [7, ""]], ""),
+						 "Should return a tuple where the first element is a sorted list of lists, where each list is an integer followed by an empty string, and the second tuple element is an empty string, without the whitespace triggering a return value of False.")
 		
 	# Only numbers and modifiers in list
 	def test_convertPageList_numbersAndModifiers(self):
-		self.assertEqual(comicSpreadStitch.convertPageList("5l,3r,9s,7m", "Test book directory"), [[3, "r"], [5, "l"], [7, "m"], [9, "s"]], "Should return a sorted list of lists, where each list is an integer followed by one of the following letters: l, m, r, s.")
+		self.assertEqual(comicSpreadStitch.convertPageList("5l,3r,9s,7m", "Test book directory"),
+						 ([[3, "r"], [5, "l"], [7, "m"], [9, "s"]], ""),
+						 "Should return a tuple where the first element is a sorted list of lists, where each list is an integer followed by one of the following letters: l, m, r, s, and the second tuple element is an empty string.")
 		
 	# Numbers, modifiers, and spaces in list
 	def test_convertPageList_numbersModifiersAndSpaces(self):
-		self.assertEqual(comicSpreadStitch.convertPageList("5l, 3r, 9s, 7m, 10d", "Test book directory"), [[3, "r"], [5, "l"], [7, "m"], [9, "s"], [10, "d"]], "Should return a sorted list of lists, where each list is an integer followed by one of the following letters: l, m, r, s, d, without the whitespace triggering a return value of False.")
+		self.assertEqual(comicSpreadStitch.convertPageList("5l, 3r, 9s, 7m, 10d", "Test book directory"),
+						 ([[3, "r"], [5, "l"], [7, "m"], [9, "s"], [10, "d"]], ""),
+						 "Should return a tuple where the first element is a sorted list of lists, where each list is an integer followed by one of the following letters: l, m, r, s, d, and the second tuple element is an empty string, without the whitespace triggering a return value of False.")
 	
 	# Deletion range
 	def test_convertPageList_deletionRange(self):
-		self.assertEqual(comicSpreadStitch.convertPageList("4,33-36d", "Test book directory"), [[4, ""], [33, "d"], [34, "d"], [35, "d"], [36, "d"]], "Should return each page from 33 to 36 inclusive for deletion, plus page 4 for stitching.")
-	
+		self.assertEqual(comicSpreadStitch.convertPageList("4,33-36d", "Test book directory"),
+						 ([[4, ""], [33, "d"], [34, "d"], [35, "d"], [36, "d"]], ""),
+						 "Should return a tuple where the first element is a list containing each page from 33 to 36 inclusive for deletion, plus page 4 for stitching, and the second tuple element is an empty string.")
+
 
 class TestFindBookFile(unittest.TestCase):
-	def setUp(self):
-		self.capturedOutput = io.StringIO()
-		sys.stdout = self.capturedOutput
-	
-	def tearDown(self):
-		sys.stdout = sys.__stdout__
-	
 	# Directory has no CBZ file
 	def test_findBookFile_noCBZ(self):
 		noCBZ = os.path.join(os.path.dirname(__file__), "test-resources", "no-cbz")
 		os.chdir(noCBZ)
-		self.assertEqual(comicSpreadStitch.findBookFile(False, False, False), "", "{} should not have a CBZ file.".format(noCBZ))
+		self.assertEqual(comicSpreadStitch.findBookFile(False, False, False), (False, ""), f"{noCBZ} should not have a CBZ file.")
 		
 	# Directory has a CBZ_OLD file
 	def test_findBookFile_CBZOLD(self):
 		yesCBZOLD = os.path.join(os.path.dirname(__file__), "test-resources", "cbz-old")
 		os.chdir(yesCBZOLD)
-		file = comicSpreadStitch.findBookFile(False, False, False)
-		self.assertFalse(file, "{} should have a CBZ_OLD file.".format(yesCBZOLD))
-		self.assertEqual(self.capturedOutput.getvalue(),
-			"{} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the CBZ_OLD file or adding \"backedup\" as an option on the input.\n\n".format(yesCBZOLD),
+		valid, file = comicSpreadStitch.findBookFile(False, False, False)
+		self.assertFalse(valid, f"{yesCBZOLD} should have a CBZ_OLD file.")
+		self.assertEqual(file,
+			f"{yesCBZOLD} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the CBZ_OLD file or adding \"backedup\" as an option on the input.\n",
 			"Console output is incorrect.")
 		
 	# Directory has a CBZ file and no CBZ_OLD file
 	def test_findBookFile_onlyCBZ(self):
 		correctFilesDir = os.path.join(os.path.dirname(__file__), "test-resources", "cbz")
 		os.chdir(correctFilesDir)
-		self.assertEqual(comicSpreadStitch.findBookFile(False, False, False), "dummy.cbz", "{} should have a CBZ file but not a CBZ_OLD file.".format(correctFilesDir))
+		self.assertEqual(comicSpreadStitch.findBookFile(False, False, False), (True, "dummy.cbz"), f"{correctFilesDir} should have a CBZ file but not a CBZ_OLD file.")
 		
-	# Directory has a CBZ_OLD file, but backedup flag is set
+	# Directory has a CBZ_OLD file and backedup flag is set
 	def test_findBookFile_backedupCBZOLD(self):
 		yesCBZOLD = os.path.join(os.path.dirname(__file__), "test-resources", "cbz-old")
 		os.chdir(yesCBZOLD)
-		self.assertEqual(comicSpreadStitch.findBookFile(True, False, False), "dummy.cbz", "The CBZ_OLD file in {} should be ignored because the backedup flag is set.".format(yesCBZOLD))
+		self.assertEqual(comicSpreadStitch.findBookFile(True, False, False), (True, "dummy.cbz"), f"The CBZ_OLD file in {yesCBZOLD} should be ignored because the backedup flag is set.")
 		
 	# Directory has no CBZ_OLD file, but backedup flag is set
 	def test_findBookFile_backedupCBZ(self):
 		correctFilesDir = os.path.join(os.path.dirname(__file__), "test-resources", "cbz")
 		os.chdir(correctFilesDir)
-		file = comicSpreadStitch.findBookFile(True, False, False)
-		self.assertFalse(file, "{} should not have a CBZ_OLD file.".format(correctFilesDir))
-		self.assertEqual(self.capturedOutput.getvalue(),
-			"{} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n\n".format(correctFilesDir),
+		valid, file = comicSpreadStitch.findBookFile(True, False, False)
+		self.assertFalse(valid, f"{correctFilesDir} should not have a CBZ_OLD file.")
+		self.assertEqual(file,
+			f"{correctFilesDir} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n",
 			"Console output is incorrect.")
 	
 	# TODO: add tests for ePubs
