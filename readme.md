@@ -1,12 +1,12 @@
 # About
 If you've ever read digital comic books, you've probably come across something that would have been a two-page spread in print, but has been split into two parts, so it's hard to view as the creators intended. Comic Spread Stitch is a collection of Python scripts that partially automates stitching these spreads together into a single image or page so that your reader will show the whole thing at once. It can also rotate pages that are supposed to be in landscape orientation so that you don't have to choose between tilting your monitor and tilting your head, and can delete pages you don't want, such as intrusive ads or accidental page repetitions.
 # Limitations
-As I only intended this to be used by myself, these scripts lack some of the bells and whistles a project meant for others might have.
-- They must be used through the command line
-- They assume that each comic book has its own directory (which is the way the ebook management program [Calibre](https://calibre-ebook.com/) organizes book files on disk)
-- They only accept CBZ, ePub, or PDF files as input, and will output CBZ files from ePub inputs
+As I only intended this to be used by myself, this project lacks some of the bells and whistles a project meant for others might have.
+- It must be used through the command line
+- It assumes that each comic book has its own directory (which is the way the ebook management program [Calibre](https://calibre-ebook.com/) organizes book files on disk)
+- It only accepts CBZ, ePub, or PDF files as input, and will output CBZ files from ePub inputs
 # How to install
-Before using these scripts, you will need Python 3 installed on your computer, whether [on its own](https://www.python.org/downloads/) or through [Anaconda](https://www.anaconda.com/download/). You will also need [Git](https://git-scm.com/downloads) to clone the repo.
+Before using this project, you will need Python 3 installed on your computer, whether [on its own](https://www.python.org/downloads/) or through [Anaconda](https://www.anaconda.com/download/). You will also need [Git](https://git-scm.com/downloads) to clone the repo.
 
 In the command line, navigate to wherever you want the files to live and clone the repo from GitHub.
 ```
@@ -78,5 +78,13 @@ There are two arguments you can add to the command line, both of which have to d
 - `-c` or `--compression`: If the images are stored in a lossy compression format, such as JPG, checking to see if two columns match perfectly may give false negatives. This argument provides the maximum difference allowed between the same color channel of two pixels for the script to consider it an overlap. Defaults to 75 (out of 255).
 
 If you find that spreads seem to have jumps in the middle where part of the image repeats, try entering different values for these arguments and see if that helps.
+
+## Using the GUI
+If you prefer using a GUI, you can, after setting up the Python or Anaconda environment, run the following command from the directory of the Git repo:
+```
+python gui.py
+```
+This will open a window that allows you to choose the book you want to process using a file dialog (note that, at least for the time being, it must still be the only file in its directory with its file extension), list the pages you want processed in the same format as you would in `pagesToProcess.txt`, control the overlap and compression fuzz arguments, and use the `manga`, `rightlines`, and `backedup` options. At present, the GUI only allows for processing one book at a time.
+
 # Unit test files
 If you decide to make any updates of your own, the files `test_comicSpreadStitch.py` and `test_epubToCbz.py` contain unit tests that can be used to check whether your changes break other functionality. Be warned about relying on them, however; they are not comprehensive, and depending on what changes you make, the tests may break even though your changes are working as intended. To run them, navigate to the project directory in a command prompt and run `python test_comicSpreadStitch.py` or `python test_epubToCbz.py`.

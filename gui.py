@@ -63,7 +63,23 @@ def main():
             line += "|rightlines"
         if backedup.get() == "1":
             line += "|backedup"
-        result, reason = comicSpreadStitch.processBook(line)
+        if (not ent_comp.get().isdigit()) and (not ent_comp.get() == ""):
+            lbl_results["text"] = "Compression fuzz should be a non-negative integer"
+            return
+        else:
+            if ent_comp.get() == "":
+                comp = 75
+            else:
+                comp = int(ent_comp.get())
+        if (not ent_overlap.get().isdigit()) and (not ent_overlap.get() == ""):
+            lbl_results["text"] = "Overlap should be a non-negative integer"
+            return
+        else:
+            if ent_overlap.get() == "":
+                over = 50
+            else:
+                over = int(ent_overlap.get())
+        result, reason = comicSpreadStitch.processBook(line, overlap = over, compression = comp)
         lbl_results["text"] = reason
 
     window = tk.Tk()
@@ -79,7 +95,7 @@ def main():
     # button to process the file
     btn_process = ttk.Button(text = "Process", command = process)
     # label to show the results of the processing
-    lbl_results = ttk.Label(text = "Click Process button to see results")
+    lbl_results = ttk.Label(text = "Click Process button to see results", wraplength = 300, justify = "left")
 
     # manga checkbox
     manga = tk.StringVar()
@@ -91,6 +107,17 @@ def main():
     backedup = tk.StringVar()
     cb_backedup = ttk.Checkbutton(text = "Backed up", variable = backedup)
 
+    # compression entry
+    lbl_comp = ttk.Label(text = "Compression Fuzz:")
+    ent_comp = ttk.Entry(width = 7)
+    # set default
+    ent_comp.insert(0, "75")
+    # overlap entry
+    lbl_overlap = ttk.Label(text = "Overlap:")
+    ent_overlap = ttk.Entry(width = 7)
+    # set default
+    ent_overlap.insert(0, "50")
+
     # a progress bar would be nice, though it might have to wait until I allow multiple books at once in the GUI
 
     # put widgets into window
@@ -100,10 +127,14 @@ def main():
     lbl_pages.grid(row = 1, column = 0, sticky = "e")
     ent_pages.grid(row = 1, column = 1)
     btn_process.grid(row = 1, column = 2)
-    cb_manga.grid(row = 2, column = 0)
-    cb_rightlines.grid(row = 2, column = 1)
-    cb_backedup.grid(row = 2, column = 2)
-    lbl_results.grid(row = 3, column = 1)
+    lbl_overlap.grid(row = 2, column = 0, sticky = "e")
+    ent_overlap.grid(row = 2, column = 1, sticky = "w")
+    lbl_comp.grid(row = 2, column = 1, sticky = "e")
+    ent_comp.grid(row = 2, column = 2, sticky = "w")
+    cb_manga.grid(row = 3, column = 0)
+    cb_rightlines.grid(row = 3, column = 1)
+    cb_backedup.grid(row = 3, column = 2)
+    lbl_results.grid(row = 4, column = 1)
 
     window.mainloop()
 
