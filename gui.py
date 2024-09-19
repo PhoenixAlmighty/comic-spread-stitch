@@ -20,12 +20,45 @@ import tkinter.ttk as ttk
 import comicSpreadStitch
 import os
 
-# TODO: disable Process button when no books
-
 def main():
-    # process the file
-    def process():
-        for book in books:
+    window = BookWindow()
+
+    window.root.mainloop()
+
+class BookWindow:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Comic Spread Stitch")
+        # list of books with one to start
+        self.books = [BookFrame(self)]
+        # frame to contain process and add buttons
+        self.frm_bottom = tk.Frame(master = self.root)
+        # button to process the file(s)
+        self.btn_process = ttk.Button(master = self.frm_bottom, text = "Process", command = self.process)
+        # button to add another book
+        self.btn_add = ttk.Button(master = self.frm_bottom, text = "Add book", command = self.addBook)
+
+        # a progress bar would be nice here
+
+        self.btn_process.grid(row = 0, column = 1, sticky = "e")
+        self.btn_add.grid(row = 0, column = 0, sticky = "e")
+        for idx, book in enumerate(self.books):
+            book.frm.grid(row = idx, column = 0, padx = 3, pady = 3, ipadx = 1, ipady = 1)
+        self.frm_bottom.grid(row = len(self.books), column = 0, sticky = "e")
+
+    def addBook(self):
+        self.books.append(BookFrame(self))
+        self.frm_bottom.grid_forget()
+        self.books[-1].frm.grid(row = len(self.books) - 1, column = 0, padx = 3, pady = 3, ipadx = 1, ipady = 1)
+        self.frm_bottom.grid(row = len(self.books), column = 0, sticky = "e")
+        if self.btn_process['state'] == tk.DISABLED:
+            self.btn_process.config(state = tk.NORMAL)
+
+    # process the file(s)
+    def process(self):
+        self.btn_add.config(state = tk.DISABLED)
+        self.btn_process.config(state = tk.DISABLED)
+        for book in self.books:
             book.lbl_results["text"] = "Working..."
             filepath = book.ent_filepath.get()
             if not filepath:
@@ -68,42 +101,15 @@ def main():
                     over = 50
                 else:
                     over = int(book.ent_overlap.get())
-            result, reason = comicSpreadStitch.processBook(line, overlap = over, compression = comp)
+            result, reason = comicSpreadStitch.processBook(line, overlap=over, compression=comp)
             book.lbl_results["text"] = reason
-
-    def addBook():
-        books.append(BookFrame(window))
-        frm_bottom.grid_forget()
-        books[-1].frm.grid(row = len(books) - 1, column = 0, padx = 3, pady = 3, ipadx = 1, ipady = 1)
-        frm_bottom.grid(row = len(books), column = 0, sticky = "e")
-
-    window = tk.Tk()
-    window.title("Comic Spread Stitch")
-
-    # list of books with one to start
-    books = [BookFrame(window)]
-
-    # frame to contain process and add buttons
-    frm_bottom = tk.Frame(master = window)
-    # button to process the file(s)
-    btn_process = ttk.Button(master = frm_bottom, text = "Process", command = process)
-    # button to add another book
-    btn_add = ttk.Button(master = frm_bottom, text = "Add book", command = addBook)
-
-    # a progress bar would be nice here
-
-    btn_process.grid(row = 0, column = 1, sticky = "e")
-    btn_add.grid(row = 0, column = 0, sticky = "e")
-    for idx, book in enumerate(books):
-        book.frm.grid(row = idx, column = 0, padx = 3, pady = 3, ipadx = 1, ipady = 1)
-    frm_bottom.grid(row = len(books), column = 0, sticky = "e")
-
-    window.mainloop()
+        self.btn_add.config(state = tk.NORMAL)
+        self.btn_process.config(state = tk.NORMAL)
 
 class BookFrame:
     def __init__(self, window):
         self.window = window
-        self.frm = tk.Frame(master = self.window, borderwidth = 2, relief = tk.RIDGE)
+        self.frm = tk.Frame(master = self.window.root, borderwidth = 2, relief = tk.RIDGE)
 
         # row 0
         # file name and path
@@ -158,7 +164,7 @@ class BookFrame:
         self.cb_manga.grid(row = 3, column = 0)
         self.cb_rightlines.grid(row = 3, column = 1)
         self.cb_backedup.grid(row = 3, column = 2)
-        self.window.update()
+        self.window.root.update()
         self.lbl_results.config(wraplength = self.cb_manga.winfo_width() + self.ent_pages.winfo_width() - 5)
         self.lbl_results.grid(row = 4, column = 0, columnspan = 2)
         self.btn_remove.grid(row = 4, column = 2, sticky = "es")
@@ -183,6 +189,9 @@ class BookFrame:
             widget.destroy()
         self.frm.grid_forget()
         self.frm.destroy()
+        self.window.books.remove(self)
+        if len(self.window.books) == 0:
+            self.window.btn_process.config(state = tk.DISABLED)
         del self
 
 if __name__ == "__main__":
