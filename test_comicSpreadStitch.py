@@ -227,9 +227,19 @@ class TestFindBookFile(unittest.TestCase):
 			f"{correctFilesDir} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n",
 			"Console output is incorrect.")
 	
-	# TODO: add tests for ePubs
+	def test_findBookFile_noEpub(self):
+		noCBZ = os.path.join(os.path.dirname(__file__), "test-resources", "no-cbz")
+		os.chdir(noCBZ)
+		self.assertEqual(comicSpreadStitch.findBookFile(False, True, False), (False, ""), f"{noCBZ} should not have an ePub file.")
+
+	# TODO: add more tests for ePubs
+
+	def test_findBookFile_noPdf(self):
+		noCBZ = os.path.join(os.path.dirname(__file__), "test-resources", "no-cbz")
+		os.chdir(noCBZ)
+		self.assertEqual(comicSpreadStitch.findBookFile(False, False, True), (False, ""), f"{noCBZ} should not have a PDF file.")
 	
-	# TODO: add tests for PDFs
+	# TODO: add more tests for PDFs
 	
 
 class TestGetBookFlags(unittest.TestCase):
