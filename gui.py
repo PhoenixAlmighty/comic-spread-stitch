@@ -20,9 +20,151 @@ import tkinter.ttk as ttk
 import comicSpreadStitch
 import os
 
+# TODO: disable Process button when no books
+
 def main():
+    # process the file
+    def process():
+        for book in books:
+            book.lbl_results["text"] = "Working..."
+            filepath = book.ent_filepath.get()
+            if not filepath:
+                book.lbl_results["text"] = "No file entered"
+                continue
+            name, ext = os.path.splitext(filepath)
+            # first part of line needs to be directory the book file is in
+            # get this from os.path.split()
+            # second part of line needs to be list of pages
+            line = f"{os.path.split(name)[0]}|{book.ent_pages.get()}"
+            match ext:
+                case ".epub":
+                    line += "|epub"
+                case ".pdf":
+                    line += "|pdf"
+                case ".cbz":
+                    pass
+                case _:
+                    book.lbl_results["text"] = "Unsupported file type"
+                    continue
+            if book.manga.get() == "1":
+                line += "|manga"
+            if book.rightlines.get() == "1":
+                line += "|rightlines"
+            if book.backedup.get() == "1":
+                line += "|backedup"
+            if (not book.ent_comp.get().isdigit()) and (not book.ent_comp.get() == ""):
+                book.lbl_results["text"] = "Compression fuzz should be a non-negative integer"
+                continue
+            else:
+                if book.ent_comp.get() == "":
+                    comp = 75
+                else:
+                    comp = int(book.ent_comp.get())
+            if (not book.ent_overlap.get().isdigit()) and (not book.ent_overlap.get() == ""):
+                book.lbl_results["text"] = "Overlap should be a non-negative integer"
+                continue
+            else:
+                if book.ent_overlap.get() == "":
+                    over = 50
+                else:
+                    over = int(book.ent_overlap.get())
+            result, reason = comicSpreadStitch.processBook(line, overlap = over, compression = comp)
+            book.lbl_results["text"] = reason
+
+    def addBook():
+        books.append(BookFrame(window))
+        frm_bottom.grid_forget()
+        books[-1].frm.grid(row = len(books) - 1, column = 0, padx = 3, pady = 3, ipadx = 1, ipady = 1)
+        frm_bottom.grid(row = len(books), column = 0, sticky = "e")
+
+    window = tk.Tk()
+    window.title("Comic Spread Stitch")
+
+    # list of books with one to start
+    books = [BookFrame(window)]
+
+    # frame to contain process and add buttons
+    frm_bottom = tk.Frame(master = window)
+    # button to process the file(s)
+    btn_process = ttk.Button(master = frm_bottom, text = "Process", command = process)
+    # button to add another book
+    btn_add = ttk.Button(master = frm_bottom, text = "Add book", command = addBook)
+
+    # a progress bar would be nice here
+
+    btn_process.grid(row = 0, column = 1, sticky = "e")
+    btn_add.grid(row = 0, column = 0, sticky = "e")
+    for idx, book in enumerate(books):
+        book.frm.grid(row = idx, column = 0, padx = 3, pady = 3, ipadx = 1, ipady = 1)
+    frm_bottom.grid(row = len(books), column = 0, sticky = "e")
+
+    window.mainloop()
+
+class BookFrame:
+    def __init__(self, window):
+        self.window = window
+        self.frm = tk.Frame(master = self.window, borderwidth = 2, relief = tk.RIDGE)
+
+        # row 0
+        # file name and path
+        self.lbl_filepath = ttk.Label(master = self.frm, text = "File:")
+        self.ent_filepath = ttk.Entry(master = self.frm, width = 50)
+        self.btn_filepath = ttk.Button(master = self.frm, text = "Browse...", command = self.browseFiles)
+
+        # row 1
+        # pages to process
+        self.lbl_pages = ttk.Label(master = self.frm, text = "Pages:")
+        self.ent_pages = ttk.Entry(master = self.frm, width = 50)
+
+        #row 2
+        # compression entry
+        self.lbl_comp = ttk.Label(master = self.frm, text = "Compression Fuzz:")
+        self.ent_comp = ttk.Entry(master = self.frm, width = 7)
+        # set default
+        self.ent_comp.insert(0, "75")
+        # overlap entry
+        self.lbl_overlap = ttk.Label(master = self.frm, text = "Overlap:")
+        self.ent_overlap = ttk.Entry(master = self.frm, width = 7)
+        # set default
+        self.ent_overlap.insert(0, "50")
+
+        # row 3
+        # manga checkbox
+        self.manga = tk.StringVar()
+        self.cb_manga = ttk.Checkbutton(master = self.frm, text = "Manga", variable = self.manga)
+        # rightlines checkbox
+        self.rightlines = tk.StringVar()
+        self.cb_rightlines = ttk.Checkbutton(master = self.frm, text = "Remove right lines", variable = self.rightlines)
+        # backedup checkbox
+        self.backedup = tk.StringVar()
+        self.cb_backedup = ttk.Checkbutton(master = self.frm, text = "Backed up", variable = self.backedup)
+
+        # row 4
+        # label to show the results of the processing
+        self.lbl_results = ttk.Label(master = self.frm, text = "Click Process button to see results", wraplength = 300, justify = "left")
+        # button to remove this book
+        self.btn_remove = ttk.Button(master = self.frm, text = "Remove", command = self.removeBook)
+
+        # put widgets into frame
+        self.lbl_filepath.grid(row = 0, column = 0, sticky = "e")
+        self.ent_filepath.grid(row = 0, column = 1)
+        self.btn_filepath.grid(row = 0, column = 2)
+        self.lbl_pages.grid(row = 1, column = 0, sticky = "e")
+        self.ent_pages.grid(row = 1, column = 1)
+        self.lbl_overlap.grid(row = 2, column = 0, sticky = "e")
+        self.ent_overlap.grid(row = 2, column = 1, sticky = "w")
+        self.lbl_comp.grid(row = 2, column = 1, sticky = "e")
+        self.ent_comp.grid(row = 2, column = 2, sticky = "w")
+        self.cb_manga.grid(row = 3, column = 0)
+        self.cb_rightlines.grid(row = 3, column = 1)
+        self.cb_backedup.grid(row = 3, column = 2)
+        self.window.update()
+        self.lbl_results.config(wraplength = self.cb_manga.winfo_width() + self.ent_pages.winfo_width() - 5)
+        self.lbl_results.grid(row = 4, column = 0, columnspan = 2)
+        self.btn_remove.grid(row = 4, column = 2, sticky = "es")
+
     # choose file to process
-    def browseFiles():
+    def browseFiles(self):
         # only CBZ, ePub, and PDF files are supported, so only those are allowable
         filename = filedialog.askopenfilename(initialdir = "/",
                                               title = "Select book",
@@ -31,112 +173,17 @@ def main():
                                                            ("ePub files", "*.epub"),
                                                            ("PDF files", "*.pdf")))
         # clear entry box
-        ent_filepath.delete(0, tk.END)
+        self.ent_filepath.delete(0, tk.END)
         # insert filename into entry box
-        ent_filepath.insert(0, filename)
+        self.ent_filepath.insert(0, filename)
 
-    # process the file
-    def process():
-        lbl_results["text"] = "Working..."
-        filepath = ent_filepath.get()
-        if not filepath:
-            lbl_results["text"] = "No file entered"
-            return
-        name, ext = os.path.splitext(filepath)
-        # first part of line needs to be directory the book file is in
-        # get this from os.path.split()
-        # second part of line needs to be list of pages
-        line = f"{os.path.split(name)[0]}|{ent_pages.get()}"
-        match ext:
-            case ".epub":
-                line += "|epub"
-            case ".pdf":
-                line += "|pdf"
-            case ".cbz":
-                pass
-            case _:
-                lbl_results["text"] = "Unsupported file type"
-                return
-        if manga.get() == "1":
-            line += "|manga"
-        if rightlines.get() == "1":
-            line += "|rightlines"
-        if backedup.get() == "1":
-            line += "|backedup"
-        if (not ent_comp.get().isdigit()) and (not ent_comp.get() == ""):
-            lbl_results["text"] = "Compression fuzz should be a non-negative integer"
-            return
-        else:
-            if ent_comp.get() == "":
-                comp = 75
-            else:
-                comp = int(ent_comp.get())
-        if (not ent_overlap.get().isdigit()) and (not ent_overlap.get() == ""):
-            lbl_results["text"] = "Overlap should be a non-negative integer"
-            return
-        else:
-            if ent_overlap.get() == "":
-                over = 50
-            else:
-                over = int(ent_overlap.get())
-        result, reason = comicSpreadStitch.processBook(line, overlap = over, compression = comp)
-        lbl_results["text"] = reason
-
-    window = tk.Tk()
-    window.title("Comic Spread Stitch")
-
-    # file name and path
-    lbl_filepath = ttk.Label(text = "File:")
-    ent_filepath = ttk.Entry(width = 50)
-    btn_filepath = ttk.Button(text = "Browse...", command = browseFiles)
-    # pages to process
-    lbl_pages = ttk.Label(text = "Pages:")
-    ent_pages = ttk.Entry(width = 50)
-    # button to process the file
-    btn_process = ttk.Button(text = "Process", command = process)
-    # label to show the results of the processing
-    lbl_results = ttk.Label(text = "Click Process button to see results", wraplength = 300, justify = "left")
-
-    # manga checkbox
-    manga = tk.StringVar()
-    cb_manga = ttk.Checkbutton(text = "Manga", variable = manga)
-    # rightlines checkbox
-    rightlines = tk.StringVar()
-    cb_rightlines = ttk.Checkbutton(text = "Remove right lines", variable = rightlines)
-    # backedup checkbox
-    backedup = tk.StringVar()
-    cb_backedup = ttk.Checkbutton(text = "Backed up", variable = backedup)
-
-    # compression entry
-    lbl_comp = ttk.Label(text = "Compression Fuzz:")
-    ent_comp = ttk.Entry(width = 7)
-    # set default
-    ent_comp.insert(0, "75")
-    # overlap entry
-    lbl_overlap = ttk.Label(text = "Overlap:")
-    ent_overlap = ttk.Entry(width = 7)
-    # set default
-    ent_overlap.insert(0, "50")
-
-    # a progress bar would be nice, though it might have to wait until I allow multiple books at once in the GUI
-
-    # put widgets into window
-    lbl_filepath.grid(row = 0, column = 0, sticky = "e")
-    ent_filepath.grid(row = 0, column = 1)
-    btn_filepath.grid(row = 0, column = 2)
-    lbl_pages.grid(row = 1, column = 0, sticky = "e")
-    ent_pages.grid(row = 1, column = 1)
-    btn_process.grid(row = 1, column = 2)
-    lbl_overlap.grid(row = 2, column = 0, sticky = "e")
-    ent_overlap.grid(row = 2, column = 1, sticky = "w")
-    lbl_comp.grid(row = 2, column = 1, sticky = "e")
-    ent_comp.grid(row = 2, column = 2, sticky = "w")
-    cb_manga.grid(row = 3, column = 0)
-    cb_rightlines.grid(row = 3, column = 1)
-    cb_backedup.grid(row = 3, column = 2)
-    lbl_results.grid(row = 4, column = 1)
-
-    window.mainloop()
+    def removeBook(self):
+        for widget in self.frm.winfo_children():
+            widget.grid_forget()
+            widget.destroy()
+        self.frm.grid_forget()
+        self.frm.destroy()
+        del self
 
 if __name__ == "__main__":
     main()
