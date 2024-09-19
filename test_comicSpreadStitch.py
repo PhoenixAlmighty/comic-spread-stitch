@@ -209,13 +209,13 @@ class TestFindBookFile(unittest.TestCase):
 	def test_findBookFile_onlyCBZ(self):
 		correctFilesDir = os.path.join(os.path.dirname(__file__), "test-resources", "cbz")
 		os.chdir(correctFilesDir)
-		self.assertEqual(comicSpreadStitch.findBookFile(False, False, False), (True, "dummy.cbz"), f"{correctFilesDir} should have a CBZ file but not a CBZ_OLD file.")
+		self.assertEqual(comicSpreadStitch.findBookFile(False, False, False), (True, "Test.cbz"), f"{correctFilesDir} should have a CBZ file but not a CBZ_OLD file.")
 		
 	# Directory has a CBZ_OLD file and backedup flag is set
 	def test_findBookFile_backedupCBZOLD(self):
 		yesCBZOLD = os.path.join(os.path.dirname(__file__), "test-resources", "cbz-old")
 		os.chdir(yesCBZOLD)
-		self.assertEqual(comicSpreadStitch.findBookFile(True, False, False), (True, "dummy.cbz"), f"The CBZ_OLD file in {yesCBZOLD} should be ignored because the backedup flag is set.")
+		self.assertEqual(comicSpreadStitch.findBookFile(True, False, False), (True, "Test.cbz"), f"The CBZ_OLD file in {yesCBZOLD} should be ignored because the backedup flag is set.")
 		
 	# Directory has no CBZ_OLD file, but backedup flag is set
 	def test_findBookFile_backedupCBZ(self):

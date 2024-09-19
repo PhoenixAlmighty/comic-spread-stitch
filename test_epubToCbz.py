@@ -73,10 +73,11 @@ class TestGetImageFilenames(unittest.TestCase):
 		expectedImgs = ['images/cover.jpg', 'images/i002.jpg', 'images/i003.jpg', 'images/i004.jpg', 'images/i005.jpg', 'images/i006.jpg', 'images/i007.jpg', 'images/i008.jpg', 'images/i009.jpg', 'images/i010.jpg', 'images/i011.jpg', 'images/i012.jpg', 'images/i013.jpg', 'images/i014.jpg', 'images/i015.jpg', 'images/i016.jpg', 'images/i017.jpg', 'images/i018.jpg']
 		self.assertEqual(imgs, expectedImgs, "Image list is not what was expected.")
 	
-	# not going to bother testing buildCbzFile, I already know it works and I'm not sure how to compare the content of 2 files in an assertion
+
+# not going to bother testing buildCbzFile, I already know it works and I'm not sure how to compare the content of 2 files in an assertion
 
 
-class TestFindHtmlAtttributeValue(unittest.TestCase):
+class TestFindHtmlAttributeValue(unittest.TestCase):
 	# no negative tests, since I didn't put in any validation for this function
 	
 	# double quotes
@@ -131,6 +132,19 @@ class TestFindOpfEnterDoc(unittest.TestCase):
 		docDir, opfFile = epubToCbz.findOpfEnterDoc(self.bookDir, self.tempPath)
 		self.assertEqual(docDir, "OEBPS", "docDir should be OEBPS.")
 		self.assertEqual(opfFile, "content.opf", "opfFile should be content.opf.")
+
+
+class TestGetInnerTagContent(unittest.TestCase):
+	# basic sanity to make sure it's working
+	def test_getInnerTagContent_sanity1(self):
+		expected = '<a href="#page199">Winter Vegetable Stew</a>'
+		actual = epubToCbz.getInnerTagContent('<p class="center"><a href="#page199">Winter Vegetable Stew</a></p>')
+		self.assertEqual(expected, actual, "Should return the <a> tag, its contents, and the closing tag")
+
+	def test_getInnerTagContent_sanity2(self):
+		expected = 'Winter Vegetable Stew'
+		actual = epubToCbz.getInnerTagContent('<a href="#page199">Winter Vegetable Stew</a>')
+		self.assertEqual(expected, actual, "Should return the inner contents of the <a> tag")
 
 if __name__ == "__main__":
 	unittest.main()
