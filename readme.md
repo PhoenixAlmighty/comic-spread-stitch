@@ -84,7 +84,7 @@ If you prefer using a GUI, you can, after setting up the Python or Anaconda envi
 ```
 python gui.py
 ```
-This will open a window that allows you to choose the book you want to process using a file dialog (note that, at least for the time being, it must still be the only file in its directory with its file extension), list the pages you want processed in the same format as you would in `pagesToProcess.txt`, control the overlap and compression fuzz arguments, and use the `manga`, `rightlines`, and `backedup` options. At present, the GUI only allows for processing one book at a time.
+This will open a window that allows you to choose the book you want to process using a file dialog (note that, at least for the time being, it must still be the only file in its directory with its file extension), list the pages you want processed in the same format as you would in `pagesToProcess.txt`, control the overlap and compression fuzz arguments, and use the `manga`, `rightlines`, and `backedup` options. The window begins with one book; books may be added and removed using the `Add book` and `Remove` buttons. Clicking the `Process` button will process all books in the window.
 
 # Unit test files
 If you decide to make any updates of your own, the files `test_comicSpreadStitch.py` and `test_epubToCbz.py` contain unit tests that can be used to check whether your changes break other functionality. Be warned about relying on them, however; they are not comprehensive, and depending on what changes you make, the tests may break even though your changes are working as intended. To run them, navigate to the project directory in a command prompt and run `python test_comicSpreadStitch.py` or `python test_epubToCbz.py`.
