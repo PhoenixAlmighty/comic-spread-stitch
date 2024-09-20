@@ -1,0 +1,11 @@
+body{
+	padding:0;
+	margin:0;
+}
+svg {
+	height:100%;
+}
+#caja{
+	height:100%;
+	text-align: center;
+}

@@ -1,115 +1,51 @@
-<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+<?xml version='1.0' encoding='utf-8'?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="en">
   <head>
-    <meta name="dtb:uid" content="http://www.dynamite.com"/>
-    <meta name="dtb:depth" content="1"/>
-    <meta name="dtb:totalPageCount" content="18"/>
-    <meta name="dtb:maxPageNumber" content="18"/>
+    <meta name="dtb:uid" content="9781616289911"/>
+    <meta name="dtb:depth" content="2"/>
+    <meta name="dtb:generator" content="calibre (7.18.0)"/>
+    <meta name="dtb:totalPageCount" content="0"/>
+    <meta name="dtb:maxPageNumber" content="0"/>
   </head>
   <docTitle>
-    <text>Witchblade: Demon #1</text>
+    <text>Test ePub</text>
   </docTitle>
   <navMap>
-    <navPoint id="_2" playOrder="1">
+    <navPoint id="num_1" playOrder="1">
       <navLabel>
-        <text>2</text>
+        <text>Baboon</text>
       </navLabel>
-      <content src="p002.xhtml"/>
+      <content src="baboon.xhtml"/>
     </navPoint>
-    <navPoint id="_3" playOrder="2">
+    <navPoint id="num_2" playOrder="2">
       <navLabel>
-        <text>3</text>
+        <text>Baboon counterclockwise</text>
       </navLabel>
-      <content src="p003.xhtml"/>
+      <content src="baboonccw.xhtml"/>
     </navPoint>
-    <navPoint id="_4" playOrder="3">
+    <navPoint id="num_3" playOrder="3">
       <navLabel>
-        <text>4</text>
+        <text>Baboon clockwise</text>
       </navLabel>
-      <content src="p004.xhtml"/>
+      <content src="babooncw.xhtml"/>
     </navPoint>
-    <navPoint id="_5" playOrder="4">
+    <navPoint id="num_4" playOrder="4">
       <navLabel>
-        <text>5</text>
+        <text>Boat</text>
       </navLabel>
-      <content src="p005.xhtml"/>
+      <content src="boat.xhtml"/>
     </navPoint>
-    <navPoint id="_6" playOrder="5">
+    <navPoint id="num_5" playOrder="5">
       <navLabel>
-        <text>6</text>
+        <text>Boat counterclockwise</text>
       </navLabel>
-      <content src="p006.xhtml"/>
+      <content src="boatccw.xhtml"/>
     </navPoint>
-    <navPoint id="_7" playOrder="6">
+    <navPoint id="num_6" playOrder="6">
       <navLabel>
-        <text>7</text>
+        <text>Boat clockwise</text>
       </navLabel>
-      <content src="p007.xhtml"/>
+      <content src="boatcw.xhtml"/>
     </navPoint>
-    <navPoint id="_8" playOrder="7">
-      <navLabel>
-        <text>8</text>
-      </navLabel>
-      <content src="p008.xhtml"/>
-    </navPoint>
-    <navPoint id="_9" playOrder="8">
-      <navLabel>
-        <text>9</text>
-      </navLabel>
-      <content src="p009.xhtml"/>
-    </navPoint>
-    <navPoint id="_10" playOrder="9">
-      <navLabel>
-        <text>10</text>
-      </navLabel>
-      <content src="p010.xhtml"/>
-    </navPoint>
-    <navPoint id="_11" playOrder="10">
-      <navLabel>
-        <text>11</text>
-      </navLabel>
-      <content src="p011.xhtml"/>
-    </navPoint>
-    <navPoint id="_12" playOrder="11">
-      <navLabel>
-        <text>12</text>
-      </navLabel>
-      <content src="p012.xhtml"/>
-    </navPoint>
-    <navPoint id="_13" playOrder="12">
-      <navLabel>
-        <text>13</text>
-      </navLabel>
-      <content src="p013.xhtml"/>
-    </navPoint>
-    <navPoint id="_14" playOrder="13">
-      <navLabel>
-        <text>14</text>
-      </navLabel>
-      <content src="p014.xhtml"/>
-    </navPoint>
-    <navPoint id="_15" playOrder="14">
-      <navLabel>
-        <text>15</text>
-      </navLabel>
-      <content src="p015.xhtml"/>
-    </navPoint>
-    <navPoint id="_16" playOrder="15">
-      <navLabel>
-        <text>16</text>
-      </navLabel>
-      <content src="p016.xhtml"/>
-    </navPoint>
-    <navPoint id="_17" playOrder="16">
-      <navLabel>
-        <text>17</text>
-      </navLabel>
-      <content src="p017.xhtml"/>
-    </navPoint>
-    <navPoint id="_18" playOrder="17">
-       <navLabel>
-        <text>18</text>
-       </navLabel> 
-      <content src="p018.xhtml"/>
-     </navPoint>
- </navMap>
+  </navMap>
 </ncx>

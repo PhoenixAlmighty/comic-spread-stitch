@@ -226,7 +226,8 @@ class TestFindBookFile(unittest.TestCase):
 		self.assertEqual(file,
 			f"{correctFilesDir} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n",
 			"Console output is incorrect.")
-	
+
+	# Directory has no ePub file
 	def test_findBookFile_noEpub(self):
 		noCBZ = os.path.join(os.path.dirname(__file__), "test-resources", "no-cbz")
 		os.chdir(noCBZ)
@@ -234,6 +235,7 @@ class TestFindBookFile(unittest.TestCase):
 
 	# TODO: add more tests for ePubs
 
+	# Directory has no PDF file
 	def test_findBookFile_noPdf(self):
 		noCBZ = os.path.join(os.path.dirname(__file__), "test-resources", "no-cbz")
 		os.chdir(noCBZ)
