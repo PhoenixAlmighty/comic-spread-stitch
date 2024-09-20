@@ -172,7 +172,7 @@ def findOpfEnterDoc(bookDir, tempPath):
 def getInnerTagContent(text):
     # tag type is whatever is between the first < and the first space
     tagType = text[text.find("<") + 1:text.find(" ")]
-	# what's inside the tag is whatever is between the first > after the tag type and the closing tag
+    # what's inside the tag is whatever is between the first > after the tag type and the closing tag
     return text[text.find(">", text.find(tagType)) + len(tagType):text.find(f"</{tagType}>")]
 
 if __name__ == "__main__":
