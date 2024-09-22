@@ -193,7 +193,9 @@ class TestFindBookFile(unittest.TestCase):
 	def test_findBookFile_noCBZ(self):
 		noCBZ = os.path.join(os.path.dirname(__file__), "test-resources", "no-cbz")
 		os.chdir(noCBZ)
-		self.assertEqual(comicSpreadStitch.findBookFile(False, False, False), (False, ""), f"{noCBZ} should not have a CBZ file.")
+		self.assertEqual(comicSpreadStitch.findBookFile(False, False, False),
+						 (False, f"{noCBZ} has no CBZ files in it. Check your input."),
+						 f"{noCBZ} should not have a CBZ file.")
 		
 	# Directory has a CBZ_OLD file
 	def test_findBookFile_CBZOLD(self):
@@ -231,7 +233,9 @@ class TestFindBookFile(unittest.TestCase):
 	def test_findBookFile_noEpub(self):
 		noCBZ = os.path.join(os.path.dirname(__file__), "test-resources", "no-cbz")
 		os.chdir(noCBZ)
-		self.assertEqual(comicSpreadStitch.findBookFile(False, True, False), (False, ""), f"{noCBZ} should not have an ePub file.")
+		self.assertEqual(comicSpreadStitch.findBookFile(False, True, False),
+						 (False, f"{noCBZ} has no EPUB files in it. Check your input."),
+						 f"{noCBZ} should not have an ePub file.")
 
 	# TODO: add more tests for ePubs
 
@@ -239,7 +243,9 @@ class TestFindBookFile(unittest.TestCase):
 	def test_findBookFile_noPdf(self):
 		noCBZ = os.path.join(os.path.dirname(__file__), "test-resources", "no-cbz")
 		os.chdir(noCBZ)
-		self.assertEqual(comicSpreadStitch.findBookFile(False, False, True), (False, ""), f"{noCBZ} should not have a PDF file.")
+		self.assertEqual(comicSpreadStitch.findBookFile(False, False, True),
+						 (False, f"{noCBZ} has no PDF files in it. Check your input."),
+						 f"{noCBZ} should not have a PDF file.")
 	
 	# TODO: add more tests for PDFs
 	

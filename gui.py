@@ -19,11 +19,17 @@ from tkinter import filedialog
 import tkinter.ttk as ttk
 import comicSpreadStitch
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 def main():
+    logging.basicConfig(filename = "run.log", level = logging.INFO)
     window = BookWindow()
 
+    logger.debug("Running window main loop")
     window.root.mainloop()
+    logger.debug("Window loop finished")
 
 class BookWindow:
     def __init__(self):

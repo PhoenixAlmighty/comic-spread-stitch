@@ -19,6 +19,11 @@ import os
 import shutil
 import argparse
 import math
+import logging
+import traceback
+import datetime
+
+logger = logging.getLogger(__name__)
 
 tempPath = "temp"
 newPath = "new"
@@ -28,8 +33,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("book", help = "The absolute file path of the ePub you want to convert to CBZ")
     args = parser.parse_args()
-    result, reason = convertEpubToCbz(args.book)
-    print(reason)
+    logging.basicConfig(filename = "run.log", level = logging.INFO)
+    logger.info(f"Running at {datetime.datetime.now()}")
+    logger.debug(f"Book to convert to CBZ is {args.book}")
+    try:
+        result, reason = convertEpubToCbz(args.book)
+        if not result:
+            logger.info("Processing complete")
+        else:
+            logger.warning(reason)
+        print(reason)
+    except Exception as err:
+        out = f"Error occurred while processing\n{traceback.format_exc()}"
+        logger.error(out)
+        print(out)
 
 def convertEpubToCbz(book):
     [root, ext] = os.path.splitext(book)
@@ -37,32 +54,47 @@ def convertEpubToCbz(book):
         return 1, f"{book} is not an ePub."
 
     bookDir = os.path.dirname(book)
+    logger.debug(f"bookDir is {bookDir}")
     bookEpub = os.path.basename(book)
+    logger.debug(f"bookEpub is {bookEpub}")
     os.chdir(bookDir)
+    logger.debug(f"Changed directory into {os.getcwd()}")
 
     with ZipFile(bookEpub, "r") as zip:
         zip.extractall(path = tempPath)
+    logger.debug(f"Extracted ZIP archive to {tempPath}")
 
     os.chdir(tempPath)
+    logger.debug(f"Changed directory into {os.getcwd()}")
     docDir, opfFile = findOpfEnterDoc(bookDir, tempPath)
     if not opfFile:
         return 1, docDir
+    logger.debug(f"docDir is {docDir}")
+    logger.debug(f"opfFile is {opfFile}")
 
     # get manifest and spine from OPF file
     manifest, spine = getManifestAndSpine(opfFile)
+    logger.debug(f"Manifest is {manifest}")
+    logger.debug(f"Spine is {spine}")
 
     # go through spine and grab image filenames from the manifest
     imgs = getImageFilenames(manifest, spine)
+    logger.debug(f"Image list is {imgs}")
 
     os.chdir(bookDir)
+    logger.debug(f"Changed directory into {os.getcwd()}")
     docPath = os.path.join(tempPath, docDir)
+    logger.debug(f"docPath is {docPath}")
     cbzFileName = os.path.basename(root) + ".cbz"
+    logger.debug(f"cbzFileName is {cbzFileName}")
 
     # put pages into CBZ file
     buildCbzFile(imgs, docPath, cbzFileName)
+    logger.info("CBZ file written to disk")
 
     # clean up
     shutil.rmtree(tempPath)
+    logger.debug(f"{tempPath} deleted")
 
     return 0, f"{bookEpub} converted to CBZ."
 
@@ -90,13 +122,12 @@ def findOpfFile():
 # could be changed to return more info if more is needed in the future
 def getManifestAndSpine(opfFile):
     lines = []
-    with open(opfFile, "r", encoding='utf-8') as opf:
+    with open(opfFile, "r", encoding = 'utf-8') as opf:
         lines = opf.readlines()
+    logger.debug("Read in lines from OPF file")
 
     manifest = {}
     spine = []
-    id = ""
-    href = ""
     for line in lines:
         if "<itemref " in line:
             spine.append(getHtmlAttributeValue(line, "idref"))
@@ -153,15 +184,20 @@ def findOpfEnterDoc(bookDir, tempPath):
         docDir = getDocDir()
         if not docDir:
             os.chdir(bookDir)
+            logger.debug(f"Changed directory into {os.getcwd()}")
             shutil.rmtree(tempPath)
+            logger.debug(f"{tempPath} deleted")
             return "Provided ePub has no document directory.", False
         os.chdir(docDir)
+        logger.debug(f"Changed directory into {os.getcwd()}")
 
         # find the OPF file
         opfFile = findOpfFile()
         if not opfFile:
             os.chdir(bookDir)
+            logger.debug(f"Changed directory into {os.getcwd()}")
             shutil.rmtree(tempPath)
+            logger.debug(f"{tempPath} deleted")
             return "Provided ePub has no OPF file.", False
 
     return docDir, opfFile
