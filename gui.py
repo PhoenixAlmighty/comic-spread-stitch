@@ -57,8 +57,10 @@ class BookWindow:
         self.frm_bottom.grid_forget()
         self.books[-1].frm.grid(row = len(self.books) - 1, column = 0, padx = 3, pady = 3, ipadx = 1, ipady = 1)
         self.frm_bottom.grid(row = len(self.books), column = 0, sticky = "e")
-        if self.btn_process['state'] == tk.DISABLED:
-            self.btn_process.config(state = tk.NORMAL)
+        # there used to be a check here for whether the button was disabled
+        # but it didn't work unless I printed the button's state first
+        # and it was superfluous anyway
+        self.btn_process.config(state = tk.NORMAL)
 
     # process the file(s)
     def process(self):
@@ -188,6 +190,10 @@ class BookFrame:
         self.ent_filepath.delete(0, tk.END)
         # insert filename into entry box
         self.ent_filepath.insert(0, filename)
+        # clear page number entry box
+        self.ent_pages.delete(0, tk.END)
+        # reset result label
+        self.lbl_results["text"] = "Click Process button to see results"
 
     def removeBook(self):
         for widget in self.frm.winfo_children():
