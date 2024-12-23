@@ -186,14 +186,15 @@ class BookFrame:
                                                            ("CBZ files", "*.cbz"),
                                                            ("ePub files", "*.epub"),
                                                            ("PDF files", "*.pdf")))
-        # clear entry box
-        self.ent_filepath.delete(0, tk.END)
-        # insert filename into entry box
-        self.ent_filepath.insert(0, filename)
-        # clear page number entry box
-        self.ent_pages.delete(0, tk.END)
-        # reset result label
-        self.lbl_results["text"] = "Click Process button to see results"
+        if filename:
+            # clear entry box
+            self.ent_filepath.delete(0, tk.END)
+            # insert filename into entry box
+            self.ent_filepath.insert(0, filename)
+            # clear page number entry box
+            self.ent_pages.delete(0, tk.END)
+            # reset result label
+            self.lbl_results["text"] = "Click Process button to see results"
 
     def removeBook(self):
         for widget in self.frm.winfo_children():
