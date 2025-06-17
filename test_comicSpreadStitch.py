@@ -27,86 +27,113 @@ class TestGetResultString(unittest.TestCase):
 	def test_getResultString_backCoverOnly(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[0, ""]])
 		self.assertEqual(resultString,
-						 "Test book successfully altered on the back cover.",
+						 "Test book has been modified on the back cover.",
 						 "Console output is wrong for back cover only.")
 		
 	# Back cover + 1 spread
 	def test_getResultString_backCoverOneSpread(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[0, ""], [2, ""]])
 		self.assertEqual(resultString,
-						 "Test book successfully altered on the back cover and page 2.",
+						 "Test book has been modified on the back cover and page 2.",
 						 "Console output is wrong for back cover plus 1 spread.")
 		
 	# Back cover + 2 spreads
 	def test_getResultString_backCoverTwoSpreads(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[0, ""], [2, ""], [4, ""]])
 		self.assertEqual(resultString,
-						 "Test book successfully altered on the back cover and pages 2 and 3.",
+						 "Test book has been modified on the back cover and pages 2 and 3.",
 						 "Console output is wrong for back cover plus 2 spreads.")
 		
 	# Back cover + 3 or more spreads
 	def test_getResultString_backCoverThreeSpreads(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[0, ""], [2, ""], [4, ""], [6, ""]])
 		self.assertEqual(resultString,
-						 "Test book successfully altered on the back cover and pages 2, 3, and 4.",
-						 "Console output is wrong for back cover plus 3 spreads.")
+						 "Test book has been modified on the back cover and pages 2, 3, and 4.",
+						 "getResultString output is wrong for back cover plus 3 spreads.")
 		
 	# 1 spread
 	def test_getResultString_oneSpread(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""]])
 		self.assertEqual(resultString,
-						 "Test book successfully altered on page 2.",
-						 "Console output is wrong for 1 spread.")
+						 "Test book has been modified on page 2.",
+						 "getResultString output is wrong for 1 spread.")
 		
 	# 2 spreads
 	def test_getResultString_twoSpreads(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""], [4, ""]])
 		self.assertEqual(resultString,
-						 "Test book successfully altered on pages 2 and 3.",
-						 "Console output is wrong for 2 spreads.")
+						 "Test book has been modified on pages 2 and 3.",
+						 "getResultString output is wrong for 2 spreads.")
 		
 	# 3 or more spreads
 	def test_getResultString_threeSpreads(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""], [4, ""], [6, ""]])
 		self.assertEqual(resultString,
-						 "Test book successfully altered on pages 2, 3, and 4.",
-						 "Console output is wrong for 3 spreads.")
+						 "Test book has been modified on pages 2, 3, and 4.",
+						 "getResultString output is wrong for 3 spreads.")
 		
 	# 1 rotation followed by 1 spread
 	def test_getResultString_rotationThenSpread(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[4, "l"], [6, ""]])
 		self.assertEqual(resultString,
-						 "Test book successfully altered on pages 4 and 6.",
-						 "Console output is wrong for 2 spreads and 1 rotation.")
+						 "Test book has been modified on pages 4 and 6.",
+						 "getResultString output is wrong for 2 spreads and 1 rotation.")
 		
 	# 2 spreads, 1 rotation
 	def test_getResultString_twoSpreadsOneRotation(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""], [4, "l"], [6, ""]])
 		self.assertEqual(resultString,
-						 "Test book successfully altered on pages 2, 3, and 5.",
-						 "Console output is wrong for 2 spreads and 1 rotation.")
+						 "Test book has been modified on pages 2, 3, and 5.",
+						 "getResultString output is wrong for 2 spreads and 1 rotation.")
 		
 	# 3 spreads, 1 of which is rotated
 	def test_getResultString_threeSpreadsOneRotated(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""], [4, "m"], [6, ""]])
 		self.assertEqual(resultString,
-						 "Test book successfully altered on pages 2, 3, and 4.",
-						 "Console output is wrong for 3 spreads, 1 of which has been rotated.")
+						 "Test book has been modified on pages 2, 3, and 4.",
+						 "getResultString output is wrong for 3 spreads, 1 of which has been rotated.")
 	
 	# 3 page deletions, no modifications
 	def test_getResultString_threeDeletions(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[2, "d"], [4, "d"], [6, "d"]])
 		self.assertEqual(resultString,
-						 "Test book has had 3 pages deleted.",
-						 "Console output is wrong for 3 page deletions and no page modifications.")
+						 "Test book has had deletions after pages 1, 2, and 3.",
+						 "getResultString output is wrong for 3 page deletions and no page modifications.")
 		
 	# Check that all modifiers are handled correctly
 	def test_getResultString_allModifiers(self):
 		resultString = comicSpreadStitch.getResultString("Test book", [[2, ""], [4, "m"], [6, "l"], [8, "r"], [10, "s"], [12, "d"], [14, ""]])
 		self.assertEqual(resultString,
-						 "Test book successfully altered on pages 2, 3, 4, 6, 8, and 10.",
+						 "Test book has been modified on pages 2, 3, 4, 6, 8, and 10, and has had deletions after page 8.",
 						 "At least one modifier has been handled incorrectly.")
 	
+
+class TestOneTwoOrThreeList(unittest.TestCase):
+	# No pages
+	def test_oneTwoOrThreeList_noPages(self):
+		resultString = comicSpreadStitch.oneTwoOrThreeList([])
+		self.assertEqual(resultString, "oneTwoOrThreeList got called on an empty list", "oneTwoOrThreeList output is wrong for no pages")
+
+	# 1 page
+	def test_oneTwoOrThreeList_onePage(self):
+		resultString = comicSpreadStitch.oneTwoOrThreeList([1])
+		self.assertEqual(resultString, "page 1", "oneTwoOrThreeList output is wrong for 1 page")
+
+	# 2 pages
+	def test_oneTwoOrThreeList_twoPages(self):
+		resultString = comicSpreadStitch.oneTwoOrThreeList([1, 2])
+		self.assertEqual(resultString, "pages 1 and 2", "oneTwoOrThreeList output is wrong for 2 pages")
+
+	# 3 pages
+	def test_oneTwoOrThreeList_threePages(self):
+		resultString = comicSpreadStitch.oneTwoOrThreeList([1, 2, 3])
+		self.assertEqual(resultString, "pages 1, 2, and 3", "oneTwoOrThreeList output is wrong for 3 pages")
+
+	# 6 pages
+	def test_oneTwoOrThreeList_sixPages(self):
+		resultString = comicSpreadStitch.oneTwoOrThreeList([1, 2, 3, 8, 10, 12])
+		self.assertEqual(resultString, "pages 1, 2, 3, 8, 10, and 12", "oneTwoOrThreeList output is wrong for 6 pages")
+
 
 class TestBookDirIsValid(unittest.TestCase):
 	# No book directory

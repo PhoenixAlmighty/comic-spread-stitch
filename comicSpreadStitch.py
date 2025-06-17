@@ -326,11 +326,16 @@ def getResultString(bookFileName, pagesList):
 	pagesString = ""
 	pagesDeleted = 0
 	modifiedPagesList = []
+	deletedPagesList = []
 	
 	# Make modifiedPagesList a list of all page numbers in the new file that have been modified and are still there
+	# Make deletedPagesList a list of all remaining pages right before pages that were deleted
 	for i in range(len(pagesList)):
 		if pagesList[i][1] == "d":
 			pagesDeleted += 1
+			pageBeforeDeletion = pagesList[i][0] - pagesDeleted
+			if pageBeforeDeletion not in deletedPagesList:
+				deletedPagesList.append(pageBeforeDeletion)
 		elif pagesList[i][1] in ["l","r"]:
 			modifiedPagesList.append(pagesList[i][0] - pagesDeleted)
 		else:
@@ -339,11 +344,69 @@ def getResultString(bookFileName, pagesList):
 				pagesDeleted += 1
 	
 	pagesModified = len(modifiedPagesList)
+	logger.debug(f"modifiedPagesList: {modifiedPagesList}")
+	logger.debug(f"deletedPagesList: {deletedPagesList}")
+	logger.debug(f"pagesModified: {pagesModified}")
+	logger.debug(f"pagesDeleted: {pagesDeleted}")
 	
-	if pagesModified == 0:
-		result = f"{bookFileName} has had {pagesDeleted} pages deleted."
+	# No pages either deleted or modified
+	# This code block should never be reached
+	if pagesModified == 0 and pagesDeleted == 0:
+		result = f"{bookFileName} has not been modified. I don't know how this code block was reached."
+		logger.warning(f"Result string is '{result}'")
+		return result
+
+	# No pages modified, some deleted
+	elif pagesModified == 0 and pagesDeleted > 0:
+		deletedPagesString = oneTwoOrThreeList(deletedPagesList)
+		result = f"{bookFileName} has had deletions after {deletedPagesString}."
 		logger.info(f"Result string is '{result}'")
 		return result
+
+	# No pages deleted, some modified
+	elif pagesModified > 0 and len(deletedPagesList) == 0:
+		# Check whether back cover has been modified
+		if modifiedPagesList[0] == 0:
+			# Only modified the back cover
+			if pagesModified == 1:
+				result = f"{bookFileName} has been modified on the back cover."
+				logger.info(f"Result string is '{result}'")
+				return result
+			# Modified the back cover and other pages
+			else:
+				del modifiedPagesList[0]
+				result = f"{bookFileName} has been modified on the back cover and {oneTwoOrThreeList(modifiedPagesList)}."
+				logger.info(f"Result string is '{result}'")
+				return result
+		# Did not modify the back cover
+		else:
+			result = f"{bookFileName} has been modified on {oneTwoOrThreeList(modifiedPagesList)}."
+			logger.info(f"Result string is '{result}'")
+			return result
+
+	# Pages modified and deleted
+	else:
+		deletedPagesString = oneTwoOrThreeList(deletedPagesList)
+		# Check whether back cover has been modified
+		if modifiedPagesList[0] == 0:
+			# Only modified the back cover
+			if pagesModified == 1:
+				result = f"{bookFileName} has been modified on the back cover and has had deletions after {deletedPagesString}."
+				logger.info(f"Result string is '{result}'")
+				return result
+			# Modified the back cover and other pages
+			else:
+				del modifiedPagesList[0]
+				modifiedPagesString = oneTwoOrThreeList(modifiedPagesList)
+				result = f"{bookFileName} has been modified on the back cover and {modifiedPagesString}, and has had deletions after {deletedPagesString}."
+				logger.info(f"Result string is '{result}'")
+				return result
+		# Did not modify the back cover
+		else:
+			modifiedPagesString = oneTwoOrThreeList(modifiedPagesList)
+			result = f"{bookFileName} has been modified on {modifiedPagesString}, and has had deletions after {deletedPagesString}."
+			logger.info(f"Result string is '{result}'")
+			return result
 	
 	if modifiedPagesList[0] == 0:
 		
@@ -357,7 +420,7 @@ def getResultString(bookFileName, pagesList):
 		del modifiedPagesList[0]
 		pagesModified = len(modifiedPagesList)
 	
-	# 1 non-back cover page
+	'''# 1 non-back cover page
 	if pagesModified == 1:
 		pagesString += f"page {modifiedPagesList[0]}"
 	
@@ -384,7 +447,28 @@ def getResultString(bookFileName, pagesList):
 	
 	result = f"{bookFileName} successfully altered on {pagesString}."
 	logger.info(f"Result string is '{result}'")
-	return result
+	return result'''
+
+def oneTwoOrThreeList(numList):
+	if len(numList) == 0:
+		return "oneTwoOrThreeList got called on an empty list"
+	elif len(numList) == 1:
+		return f"page {numList[0]}"
+	elif len(numList) == 2:
+		return f"pages {numList[0]} and {numList[1]}"
+	else:
+		retString = "pages "
+		for i in range(len(numList)):
+			# Last page
+			if i == len(numList) - 1:
+				retString += str(numList[i])
+			# Second to last page
+			elif i == len(numList) - 2:
+				retString += f"{numList[i]}, and "
+			# At least 2 pages remaining
+			else:
+				retString += f"{numList[i]}, "
+		return retString
 
 def bookDirIsValid(bookDir):
 	if bookDir == "":
