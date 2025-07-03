@@ -20,18 +20,10 @@ import tkinter.ttk as ttk
 import comicSpreadStitch
 import os
 import logging
-import threading
-import queue
+import multiprocessing as mp
+import time
 
 logger = logging.getLogger(__name__)
-
-def main():
-    logging.basicConfig(filename = "run.log", level = logging.INFO)
-    window = BookWindow()
-
-    logger.debug("Running window main loop")
-    window.root.mainloop()
-    logger.debug("Window loop finished")
 
 class BookWindow:
     def __init__(self):
@@ -112,7 +104,7 @@ class BookWindow:
                     over = 50
                 else:
                     over = int(book.ent_overlap.get())
-            result, reason = comicSpreadStitch.processBook(line, overlap=over, compression=comp)
+            _, reason = comicSpreadStitch.processBook(line, overlap=over, compression=comp)
             book.lbl_results["text"] = reason
         self.btn_add.config(state = tk.NORMAL)
         self.btn_process.config(state = tk.NORMAL)
@@ -122,81 +114,80 @@ class BookWindow:
         # process all books in threads
         self.btn_add.config(state=tk.DISABLED)
         self.btn_process.config(state=tk.DISABLED)
-        threadList = []
-        print("Adding threads to list")
-        for book in self.books:
-            threadList.append(threading.Thread(target = self.processOne, args = (book,)))
-        print("Starting all threads")
-        [t.start() for t in threadList]
-        while len(threadList) > 0:
-            self.root.after(1000, self.checkThreads, threadList)
+        q = mp.Queue()
+        processList = []
+        print("Adding processes to list")
+        for i in range(len(self.books)):
+            book = self.books[i]
+            book.lbl_results["text"] = "Working..."
+            filepath = book.ent_filepath.get()
+            if not filepath:
+                print("Didn't find filepath")
+                book.lbl_results["text"] = "No file entered"
+                return
+            name, ext = os.path.splitext(filepath)
+            # first part of line needs to be directory the book file is in
+            # get this from os.path.split()
+            # second part of line needs to be list of pages
+            line = f"{os.path.split(name)[0]}|{book.ent_pages.get()}"
+            match ext:
+                case ".epub":
+                    line += "|epub"
+                case ".pdf":
+                    line += "|pdf"
+                case ".cbz":
+                    pass
+                case _:
+                    print("Found bad file")
+                    book.lbl_results["text"] = "Unsupported file type"
+                    return
+            if book.manga.get() == "1":
+                line += "|manga"
+            if book.rightlines.get() == "1":
+                line += "|rightlines"
+            if book.backedup.get() == "1":
+                line += "|backedup"
+            if (not book.ent_comp.get().isdigit()) and (not book.ent_comp.get() == ""):
+                print("Bad compression fuzz")
+                book.lbl_results["text"] = "Compression fuzz should be a non-negative integer"
+                return
+            else:
+                if book.ent_comp.get() == "":
+                    comp = 75
+                else:
+                    comp = int(book.ent_comp.get())
+            if (not book.ent_overlap.get().isdigit()) and (not book.ent_overlap.get() == ""):
+                print("Bad overlap")
+                book.lbl_results["text"] = "Overlap should be a non-negative integer"
+                return
+            else:
+                if book.ent_overlap.get() == "":
+                    over = 50
+                else:
+                    over = int(book.ent_overlap.get())
+            processList.append(mp.Process(target = self.processOne, args = (i, q, line, over, comp, )))
+            # processList.append(mp.Process(target = self.testmethod))
+        print("Starting all processes")
+        for p in processList:
+            p.start()
+        # This while loop is probably the reason the main window hangs after I click Process
+        while len(processList) > 0:
+            data = q.get(block = True)
+            self.books[data[0]].lbl_results["text"] = data[1]
+        # [p.join() for p in processList]
+        print("All processes terminated")
         self.btn_add.config(state=tk.NORMAL)
         self.btn_process.config(state=tk.NORMAL)
         # once all books are done, re-enable Add and Process buttons
 
-    # check whether threads have completed
-    @staticmethod
-    def checkThreads(threadList):
-        print("Checking thread list")
-        for thread in threadList:
-            if not thread.is_alive():
-                threadList.remove(thread)
-
-    # allow use of keyword arguments in Tk.after()
-    @staticmethod
-    def extractor(func, args, kwargs):
-        func(*args, **kwargs)
-
     # process a single file
-    def processOne(self, book):
+    @staticmethod
+    def processOne(idx, q, line, over, comp):
         # process a single book, with threading enabled
-        print("Starting book thread")
-        self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = "Working..."))
-        print("Finding filepath")
-        filepath = book.ent_filepath.get()
-        if not filepath:
-            self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = "No file entered"))
-            return
-        name, ext = os.path.splitext(filepath)
-        # first part of line needs to be directory the book file is in
-        # get this from os.path.split()
-        # second part of line needs to be list of pages
-        line = f"{os.path.split(name)[0]}|{book.ent_pages.get()}"
-        match ext:
-            case ".epub":
-                line += "|epub"
-            case ".pdf":
-                line += "|pdf"
-            case ".cbz":
-                pass
-            case _:
-                self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = "Unsupported file type"))
-                return
-        if book.manga.get() == "1":
-            line += "|manga"
-        if book.rightlines.get() == "1":
-            line += "|rightlines"
-        if book.backedup.get() == "1":
-            line += "|backedup"
-        if (not book.ent_comp.get().isdigit()) and (not book.ent_comp.get() == ""):
-            self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = "Compression fuzz should be a non-negative integer"))
-            return
-        else:
-            if book.ent_comp.get() == "":
-                comp = 75
-            else:
-                comp = int(book.ent_comp.get())
-        if (not book.ent_overlap.get().isdigit()) and (not book.ent_overlap.get() == ""):
-            self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = "Overlap should be a non-negative integer"))
-            return
-        else:
-            if book.ent_overlap.get() == "":
-                over = 50
-            else:
-                over = int(book.ent_overlap.get())
-        result, reason = comicSpreadStitch.processBook(line, overlap=over, compression=comp)
-        print("Finished with book, updating results label")
-        self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = reason))
+        print(f"Starting process {idx}")
+        _, reason = comicSpreadStitch.processBook(line, overlap=over, compression=comp)
+        print(f"Finished with book process {idx}, sending result to queue")
+        q.put((idx, reason))
 
 class BookFrame:
     def __init__(self, window):
@@ -292,4 +283,9 @@ class BookFrame:
         del self
 
 if __name__ == "__main__":
-    main()
+    logging.basicConfig(filename="run.log", level=logging.INFO)
+    window = BookWindow()
+
+    logger.debug("Running window main loop")
+    window.root.mainloop()
+    logger.debug("Window loop finished")
