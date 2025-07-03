@@ -20,6 +20,8 @@ import tkinter.ttk as ttk
 import comicSpreadStitch
 import os
 import logging
+import threading
+import queue
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +42,7 @@ class BookWindow:
         # frame to contain process and add buttons
         self.frm_bottom = tk.Frame(master = self.root)
         # button to process the file(s)
-        self.btn_process = ttk.Button(master = self.frm_bottom, text = "Process", command = self.process)
+        self.btn_process = ttk.Button(master = self.frm_bottom, text = "Process", command = self.processAll)
         # button to add another book
         self.btn_add = ttk.Button(master = self.frm_bottom, text = "Add book", command = self.addBook)
 
@@ -68,6 +70,7 @@ class BookWindow:
         self.btn_process.config(state = tk.DISABLED)
         for book in self.books:
             book.lbl_results["text"] = "Working..."
+            self.root.update_idletasks()
             filepath = book.ent_filepath.get()
             if not filepath:
                 book.lbl_results["text"] = "No file entered"
@@ -113,6 +116,87 @@ class BookWindow:
             book.lbl_results["text"] = reason
         self.btn_add.config(state = tk.NORMAL)
         self.btn_process.config(state = tk.NORMAL)
+
+    # process the file(s) using threads
+    def processAll(self):
+        # process all books in threads
+        self.btn_add.config(state=tk.DISABLED)
+        self.btn_process.config(state=tk.DISABLED)
+        threadList = []
+        print("Adding threads to list")
+        for book in self.books:
+            threadList.append(threading.Thread(target = self.processOne, args = (book,)))
+        print("Starting all threads")
+        [t.start() for t in threadList]
+        while len(threadList) > 0:
+            self.root.after(1000, self.checkThreads, threadList)
+        self.btn_add.config(state=tk.NORMAL)
+        self.btn_process.config(state=tk.NORMAL)
+        # once all books are done, re-enable Add and Process buttons
+
+    # check whether threads have completed
+    @staticmethod
+    def checkThreads(threadList):
+        print("Checking thread list")
+        for thread in threadList:
+            if not thread.is_alive():
+                threadList.remove(thread)
+
+    # allow use of keyword arguments in Tk.after()
+    @staticmethod
+    def extractor(func, args, kwargs):
+        func(*args, **kwargs)
+
+    # process a single file
+    def processOne(self, book):
+        # process a single book, with threading enabled
+        print("Starting book thread")
+        self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = "Working..."))
+        print("Finding filepath")
+        filepath = book.ent_filepath.get()
+        if not filepath:
+            self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = "No file entered"))
+            return
+        name, ext = os.path.splitext(filepath)
+        # first part of line needs to be directory the book file is in
+        # get this from os.path.split()
+        # second part of line needs to be list of pages
+        line = f"{os.path.split(name)[0]}|{book.ent_pages.get()}"
+        match ext:
+            case ".epub":
+                line += "|epub"
+            case ".pdf":
+                line += "|pdf"
+            case ".cbz":
+                pass
+            case _:
+                self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = "Unsupported file type"))
+                return
+        if book.manga.get() == "1":
+            line += "|manga"
+        if book.rightlines.get() == "1":
+            line += "|rightlines"
+        if book.backedup.get() == "1":
+            line += "|backedup"
+        if (not book.ent_comp.get().isdigit()) and (not book.ent_comp.get() == ""):
+            self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = "Compression fuzz should be a non-negative integer"))
+            return
+        else:
+            if book.ent_comp.get() == "":
+                comp = 75
+            else:
+                comp = int(book.ent_comp.get())
+        if (not book.ent_overlap.get().isdigit()) and (not book.ent_overlap.get() == ""):
+            self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = "Overlap should be a non-negative integer"))
+            return
+        else:
+            if book.ent_overlap.get() == "":
+                over = 50
+            else:
+                over = int(book.ent_overlap.get())
+        result, reason = comicSpreadStitch.processBook(line, overlap=over, compression=comp)
+        print("Finished with book, updating results label")
+        self.root.after(1, self.extractor, book.lbl_results.config, (), dict(text = reason))
 
 class BookFrame:
     def __init__(self, window):
