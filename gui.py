@@ -21,7 +21,6 @@ import comicSpreadStitch
 import os
 import logging
 import multiprocessing as mp
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -120,11 +119,12 @@ class BookWindow:
         for i in range(len(self.books)):
             book = self.books[i]
             book.lbl_results["text"] = "Working..."
+            self.root.update_idletasks()
             filepath = book.ent_filepath.get()
             if not filepath:
                 print("Didn't find filepath")
                 book.lbl_results["text"] = "No file entered"
-                return
+                continue
             name, ext = os.path.splitext(filepath)
             # first part of line needs to be directory the book file is in
             # get this from os.path.split()
@@ -140,7 +140,8 @@ class BookWindow:
                 case _:
                     print("Found bad file")
                     book.lbl_results["text"] = "Unsupported file type"
-                    return
+                    self.root.update_idletasks()
+                    continue
             if book.manga.get() == "1":
                 line += "|manga"
             if book.rightlines.get() == "1":
@@ -150,7 +151,8 @@ class BookWindow:
             if (not book.ent_comp.get().isdigit()) and (not book.ent_comp.get() == ""):
                 print("Bad compression fuzz")
                 book.lbl_results["text"] = "Compression fuzz should be a non-negative integer"
-                return
+                self.root.update_idletasks()
+                continue
             else:
                 if book.ent_comp.get() == "":
                     comp = 75
@@ -159,21 +161,22 @@ class BookWindow:
             if (not book.ent_overlap.get().isdigit()) and (not book.ent_overlap.get() == ""):
                 print("Bad overlap")
                 book.lbl_results["text"] = "Overlap should be a non-negative integer"
-                return
+                self.root.update_idletasks()
+                continue
             else:
                 if book.ent_overlap.get() == "":
                     over = 50
                 else:
                     over = int(book.ent_overlap.get())
             processList.append(mp.Process(target = self.processOne, args = (i, q, line, over, comp, )))
-            # processList.append(mp.Process(target = self.testmethod))
         print("Starting all processes")
         for p in processList:
             p.start()
-        # This while loop is probably the reason the main window hangs after I click Process
-        while len(processList) > 0:
+        # This for loop still does not update the window when a single book is done
+        for i in range(len(processList)):
             data = q.get(block = True)
             self.books[data[0]].lbl_results["text"] = data[1]
+            self.root.update_idletasks()
         # [p.join() for p in processList]
         print("All processes terminated")
         self.btn_add.config(state=tk.NORMAL)
