@@ -21,6 +21,7 @@ import comicSpreadStitch
 import os
 import logging
 import multiprocessing as mp
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -116,59 +117,13 @@ class BookWindow:
         q = mp.Queue()
         processList = []
         print("Adding processes to list")
-        for i in range(len(self.books)):
-            book = self.books[i]
+        for book in self.books:
             book.lbl_results["text"] = "Working..."
-            self.root.update_idletasks()
-            filepath = book.ent_filepath.get()
-            if not filepath:
-                print("Didn't find filepath")
-                book.lbl_results["text"] = "No file entered"
-                continue
-            name, ext = os.path.splitext(filepath)
-            # first part of line needs to be directory the book file is in
-            # get this from os.path.split()
-            # second part of line needs to be list of pages
-            line = f"{os.path.split(name)[0]}|{book.ent_pages.get()}"
-            match ext:
-                case ".epub":
-                    line += "|epub"
-                case ".pdf":
-                    line += "|pdf"
-                case ".cbz":
-                    pass
-                case _:
-                    print("Found bad file")
-                    book.lbl_results["text"] = "Unsupported file type"
-                    self.root.update_idletasks()
-                    continue
-            if book.manga.get() == "1":
-                line += "|manga"
-            if book.rightlines.get() == "1":
-                line += "|rightlines"
-            if book.backedup.get() == "1":
-                line += "|backedup"
-            if (not book.ent_comp.get().isdigit()) and (not book.ent_comp.get() == ""):
-                print("Bad compression fuzz")
-                book.lbl_results["text"] = "Compression fuzz should be a non-negative integer"
-                self.root.update_idletasks()
-                continue
-            else:
-                if book.ent_comp.get() == "":
-                    comp = 75
-                else:
-                    comp = int(book.ent_comp.get())
-            if (not book.ent_overlap.get().isdigit()) and (not book.ent_overlap.get() == ""):
-                print("Bad overlap")
-                book.lbl_results["text"] = "Overlap should be a non-negative integer"
-                self.root.update_idletasks()
-                continue
-            else:
-                if book.ent_overlap.get() == "":
-                    over = 50
-                else:
-                    over = int(book.ent_overlap.get())
-            processList.append(mp.Process(target = self.processOne, args = (i, q, line, over, comp, )))
+        self.root.update_idletasks()
+        for i in range(len(self.books)):
+            bi = self.validateBookInput(i)
+            if bi:
+                processList.append(mp.Process(target = self.processOne, args = (i, q, bi[1], bi[2], bi[3], )))
         print("Starting all processes")
         for p in processList:
             p.start()
@@ -191,6 +146,103 @@ class BookWindow:
         _, reason = comicSpreadStitch.processBook(line, overlap=over, compression=comp)
         print(f"Finished with book process {idx}, sending result to queue")
         q.put((idx, reason))
+
+    # process the file(s) using a multiprocessing pool
+    def processAllPool(self):
+        self.btn_add.config(state=tk.DISABLED)
+        self.btn_process.config(state=tk.DISABLED)
+        print("Buttons disabled")
+
+        inputList = []
+        for i in range(len(self.books)):
+            book = self.books[i]
+            book.lbl_results["text"] = "Working..."
+            self.root.update_idletasks()
+            bookInput = self.validateBookInput(i)
+            if bookInput:
+                inputList.append(bookInput)
+            self.root.update_idletasks()
+
+        with mp.Pool(processes = len(inputList)) as pool:
+            result = pool.map_async(self.processOnePool, inputList, callback = self.processOnePoolCallback)
+            result.wait()
+
+        self.btn_add.config(state=tk.NORMAL)
+        self.btn_process.config(state=tk.NORMAL)
+        print("Buttons re-enabled")
+
+    # process a single file in the multiprocessing pool
+    @staticmethod
+    def processOnePool(inputs):
+        idx = inputs[0]
+        line = inputs[1]
+        over = inputs[2]
+        comp = inputs[3]
+        # [idx, line, over, comp] = inputs
+        print(f"Starting process {idx}")
+        _, reason = comicSpreadStitch.processBook(line, overlap=over, compression=comp)
+        print(f"Finished with book process {idx}, updating GUI")
+        return idx, reason
+
+    def processOnePoolCallback(self, outputs):
+        print(f"outputs is {outputs}")
+        idx = outputs[0]
+        print(f"idx is {idx}")
+        reason = outputs[1]
+        print(f"reason is {reason}")
+        self.books[idx].lbl_results.configure(text = reason)
+        print("Updated book result label")
+        self.root.update_idletasks()
+        print("Updated idle tasks")
+
+    def validateBookInput(self, idx):
+        book = self.books[idx]
+        filepath = book.ent_filepath.get()
+        if not filepath:
+            print("Didn't find filepath")
+            book.lbl_results["text"] = "No file entered"
+            return None
+        name, ext = os.path.splitext(filepath)
+        # first part of line needs to be directory the book file is in
+        # get this from os.path.split()
+        # second part of line needs to be list of pages
+        line = f"{os.path.split(name)[0]}|{book.ent_pages.get()}"
+        match ext:
+            case ".epub":
+                line += "|epub"
+            case ".pdf":
+                line += "|pdf"
+            case ".cbz":
+                pass
+            case _:
+                print("Found bad file")
+                book.lbl_results["text"] = "Unsupported file type"
+                return None
+        if book.manga.get() == "1":
+            line += "|manga"
+        if book.rightlines.get() == "1":
+            line += "|rightlines"
+        if book.backedup.get() == "1":
+            line += "|backedup"
+        if (not book.ent_comp.get().isdigit()) and (not book.ent_comp.get() == ""):
+            print("Bad compression fuzz")
+            book.lbl_results["text"] = "Compression fuzz should be a non-negative integer"
+            return None
+        else:
+            if book.ent_comp.get() == "":
+                comp = 75
+            else:
+                comp = int(book.ent_comp.get())
+        if (not book.ent_overlap.get().isdigit()) and (not book.ent_overlap.get() == ""):
+            print("Bad overlap")
+            book.lbl_results["text"] = "Overlap should be a non-negative integer"
+            return None
+        else:
+            if book.ent_overlap.get() == "":
+                over = 50
+            else:
+                over = int(book.ent_overlap.get())
+        return [idx, line, over, comp]
 
 class BookFrame:
     def __init__(self, window):
