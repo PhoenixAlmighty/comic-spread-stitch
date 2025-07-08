@@ -128,6 +128,7 @@ class BookWindow:
         for p in processList:
             p.start()
         # This for loop still does not update the window when a single book is done
+        # Using time.sleep() right after update_idletasks() doesn't help
         for i in range(len(processList)):
             data = q.get(block = True)
             self.books[data[0]].lbl_results["text"] = data[1]
