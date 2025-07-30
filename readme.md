@@ -43,7 +43,7 @@ There are several things the script can do with each page. Which one it will do 
 - `s`: Stitch this page and the page after it together, then rotate the resulting page 90 degrees clockwise
 
 There are also several options that can be applied on a per-book basis. These should follow the page list, separated by a `|`.
-- `pdf`: Tells the script to look for a PDF file in the specified directory. If a book has neither this option nor the `epub` option specified, the script will look for a CBZ file. Processing PDF files will overwrite any custom pagination with the default of starting at page 1 and counting up from there.
+- `pdf`: Tells the script to look for a PDF file in the specified directory. If a book has neither this option nor the `epub` option specified, the script will look for a CBZ file. Processing PDF files will overwrite any custom pagination with the default of starting at page 1 and counting up from there. It may also break internal referencing, such as links to other pages in the same PDF; if processing a PDF with such links, make sure they still work after processing but before deciding whether to delete the backup.
 - `epub`: Tells the script to look for an ePub file in the specified directory. If a book has neither this option nor the `pdf` option specified, the script will look for a CBZ file. Books taken as ePub inputs will come out as CBZ. If the book has no pages you wish to alter or remove, but you would like to convert the book to CBZ, simply leave the page list empty, like so:
 ```
 D:\Calibre Library\Jaouen Salaun\Asphalt Blues (2236)||epub
