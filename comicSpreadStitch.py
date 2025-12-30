@@ -30,552 +30,605 @@ tempPath = "temp"
 logger = logging.getLogger(__name__)
 
 def main():
-	parser = argparse.ArgumentParser()
-	parser.add_argument("-o", "--overlap", type=int, default=50, help="number of columns to check for overlap")
-	parser.add_argument("-c", "--compression", type=int, default=75, help="fuzz factor for compression artifacts")
-	args = parser.parse_args()
-	logging.basicConfig(filename = 'run.log', level = logging.INFO)
-	processed = 0
-	skipped = 0
-	errors = 0
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--overlap", type=int, default=50, help="number of columns to check for overlap")
+    parser.add_argument("-c", "--compression", type=int, default=75, help="fuzz factor for compression artifacts")
+    args = parser.parse_args()
+    logging.basicConfig(filename = 'run.log', level = logging.DEBUG)
+    processed = 0
+    skipped = 0
+    errors = 0
 
-	with open("pagesToProcess.txt", "r") as pagesFile:
-		lines = pagesFile.readlines()
+    with open("pagesToProcess.txt", "r") as pagesFile:
+        lines = pagesFile.readlines()
 
-	for line in lines:
-		result, reason = processBook(line, args.overlap, args.compression)
-		match result:
-			case 0:
-				processed += 1
-			case 1:
-				skipped += 1
-			case 2:
-				errors += 1
-			case _:
-				print("Unexpected result for book")
-		print(reason)
+    for line in lines:
+        result, reason = processBook(line, args.overlap, args.compression)
+        match result:
+            case 0:
+                processed += 1
+            case 1:
+                skipped += 1
+            case 2:
+                errors += 1
+            case _:
+                print("Unexpected result for book")
+        print(reason)
 
-	print(f"{processed} books processed, {skipped} skipped, and {errors} errors. See output above for results.\n")
+    print(f"{processed} books processed, {skipped} skipped, and {errors} errors. See output above for results.\n")
 
 
 def processBook(line, overlap = 50, compression = 75):
-	bookDir = ""
-	try:
-		parts = line.split("|")
-		bookDir = parts[0]
-		validBookDir, reason = bookDirIsValid(bookDir)
-		if not validBookDir:
-			return 1, reason
-		logging.basicConfig(force = True, filename = os.path.join(bookDir, "run.log"), level = logging.INFO)
-		logger.info(f"Running at {datetime.datetime.now()}")
-		logger.debug(f"Overlap checking is {overlap} columns")
-		logger.debug(f"Maximum allowable compression fuzz is {compression}")
-		logger.info(f"Line is {line}")
-		manga, backedup, epub, pdf, rightlines, unknownFlag = getBookFlags(parts[2:])
-		logger.debug(f"manga = {manga}")
-		logger.debug(f"backedup = {backedup}")
-		logger.debug(f"rightlines = {rightlines}")
-		logger.debug(f"unknownFlag = {unknownFlag}")
-		if unknownFlag:
-			logger.warning("Skipping because there's an unknown flag")
-			return 1, f"Unknown flag detected for {bookDir}. Skipping."
-		pageNumbersNotPresent = (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2
-		logging.debug(f"Page numbers are{' not' if pageNumbersNotPresent else ''} present")
+    bookDir = ""
+    try:
+        parts = line.split("|")
+        bookDir = parts[0]
+        validBookDir, reason = bookDirIsValid(bookDir)
+        if not validBookDir:
+            return 1, reason
+        logging.basicConfig(force = True, filename = os.path.join(bookDir, "run.log"), level = logging.INFO)
+        logger.info(f"Running at {datetime.datetime.now()}")
+        logger.debug(f"Overlap checking is {overlap} columns")
+        logger.debug(f"Maximum allowable compression fuzz is {compression}")
+        logger.info(f"Line is {line}")
+        manga, backedup, epub, pdf, rightlines, leftlines, toplines, bottomlines, unknownFlag = getBookFlags(parts[2:])
+        logger.debug(f"manga = {manga}")
+        logger.debug(f"backedup = {backedup}")
+        logger.debug(f"rightlines = {rightlines}")
+        logger.debug(f"leftlines = {leftlines}")
+        logger.debug(f"toplines = {toplines}")
+        logger.debug(f"bottomlines = {bottomlines}")
+        logger.debug(f"unknownFlag = {unknownFlag}")
+        if unknownFlag:
+            logger.warning("Skipping because there's an unknown flag")
+            return 1, f"Unknown flag detected for {bookDir}. Skipping."
+        pageNumbersNotPresent = (len(parts) >= 2 and parts[1].strip() == "") or len(parts) < 2
+        logging.debug(f"Page numbers are{' not' if pageNumbersNotPresent else ''} present")
 
-		os.chdir(bookDir)
-		logger.debug(f"Changed directory into {os.getcwd()}")
+        os.chdir(bookDir)
+        logger.debug(f"Changed directory into {os.getcwd()}")
 
-		if epub:
-			bookFileType = "ePub"
-		elif pdf:
-			bookFileType = "PDF"
-		else:
-			bookFileType = "CBZ"
-		logger.debug(f"Book file type is {bookFileType}")
-		validBookFile, bookFileName = findBookFile(backedup, epub, pdf)
-		if not validBookFile:
-			logger.warning(f"Skipping book because book filename is not valid. Message is: {bookFileName}")
-			return 1, bookFileName
-		logger.debug(f"Book filename is {bookFileName}")
+        if epub:
+            bookFileType = "ePub"
+        elif pdf:
+            bookFileType = "PDF"
+        else:
+            bookFileType = "CBZ"
+        logger.debug(f"Book file type is {bookFileType}")
+        validBookFile, bookFileName = findBookFile(backedup, epub, pdf)
+        if not validBookFile:
+            logger.warning(f"Skipping book because book filename is not valid. Message is: {bookFileName}")
+            return 1, bookFileName
+        logger.debug(f"Book filename is {bookFileName}")
 
-		if pageNumbersNotPresent and epub:
-			return epubToCbz.convertEpubToCbz(os.path.join(bookDir, bookFileName))
+        if pageNumbersNotPresent and epub:
+            return epubToCbz.convertEpubToCbz(os.path.join(bookDir, bookFileName))
 
-		if pageNumbersNotPresent and pdf:
-			logger.warning("Skipping because conversion from PDF to CBZ in main app are not permitted — use pdfToCbz.py instead")
-			return 1, f"Skipping {bookFileName} because conversion from PDF to CBZ doesn't always work the way you want it to. If you want to try anyway, please use the pdfToCbz.py script. Just be sure to check the output afterwards."
+        if pageNumbersNotPresent and pdf:
+            logger.warning("Skipping because conversion from PDF to CBZ in main app are not permitted — use pdfToCbz.py instead")
+            return 1, f"Skipping {bookFileName} because conversion from PDF to CBZ doesn't always work the way you want it to. If you want to try anyway, please use the pdfToCbz.py script. Just be sure to check the output afterwards."
 
-		# This should not be reached if pageNumbersNotPresent and epub, as there is a return statement in that if block
-		if pageNumbersNotPresent and rightlines:
-			logger.info("Only requesting to remove right lines")
-			with ZipFile(bookFileName, 'r') as zipf:
-				zipf.extractall(path = tempPath)
-			os.chdir(tempPath)
-			logger.debug(f"Changed directory into {os.getcwd()}")
-			imgList = getCbzImgs()
-			logger.debug(f"Image list is {imgList}")
-			removeRightLines(imgList)
-			logger.debug("Right lines removed")
-			os.chdir(bookDir)
-			logger.debug(f"Changed directory into {os.getcwd()}")
-			if not backedup:
-				os.rename(bookFileName, bookFileName + "_old")
-				logger.debug("Backup made")
-			else:
-				logger.debug("backedup flag is set, so no backup made")
-			with ZipFile(bookFileName, 'w') as newZip:
-				for file in imgList:
-					filePath = os.path.join(tempPath, file)
-					newZip.write(filePath, arcname = file)
-			logger.debug(f"{bookFileName} has been written to disk")
-			shutil.rmtree(tempPath)
-			logger.debug(f"{tempPath} deleted")
-			logger.info("Right lines removed from book")
-			logger.info("Processing complete")
-			return 0, f"{bookFileName} has had the right lines removed."
+        # This should not be reached if pageNumbersNotPresent and epub, as there is a return statement in that if block
+        if pageNumbersNotPresent and (rightlines or leftlines or toplines or bottomlines):
+            return onlyRemoveLines(bookFileName, backedup, bookDir, rightlines, leftlines, toplines, bottomlines)
 
-		if pageNumbersNotPresent:
-			logger.warning("Skipping because no page numbers and no flags to make that acceptable")
-			return 1, f"The line for {bookDir.strip()} is missing page numbers. Skipping."
+        if pageNumbersNotPresent:
+            logger.warning("Skipping because no page numbers and no flags to make that acceptable")
+            return 1, f"The line for {bookDir.strip()} is missing page numbers. Skipping."
 
-		# check for errors in input
-		pages, reason = convertPageList(parts[1], bookDir)
-		if not pages:
-			logger.warning(reason)
-			return 1, reason
-		logger.debug(f"Page list is {pages}")
+        # check for errors in input
+        pages, reason = convertPageList(parts[1], bookDir)
+        if not pages:
+            logger.warning(reason)
+            return 1, reason
+        logger.debug(f"Page list is {pages}")
 
-		if pdf:
-			status, reason = processPdf.processPdf(bookFileName, pages, manga, backedup)
-			if status:
-				logger.warning(reason)
-				return status, reason
-			else:
-				logger.info("Processing complete")
-				return 0, getResultString(bookFileName, pages)
+        if pdf:
+            status, reason = processPdf.processPdf(bookFileName, pages, manga, backedup)
+            if status:
+                logger.warning(reason)
+                return status, reason
+            else:
+                logger.info("Processing complete")
+                return 0, getResultString(bookFileName, pages)
 
-		with ZipFile(bookFileName, 'r') as zipf:
-			zipf.extractall(path = tempPath)
-		logger.debug(f"Extracted ZIP archive to {tempPath}")
+        with ZipFile(bookFileName, 'r') as zipf:
+            zipf.extractall(path = tempPath)
+        logger.debug(f"Extracted ZIP archive to {tempPath}")
 
-		os.chdir(tempPath)
-		logger.debug(f"Changed directory into {os.getcwd()}")
+        os.chdir(tempPath)
+        logger.debug(f"Changed directory into {os.getcwd()}")
 
-		if not epub:
-			imgList = getCbzImgs()
-		else:
-			docDir, opfFile = epubToCbz.findOpfEnterDoc(bookDir, tempPath)
-			if not opfFile:
-				logger.warning("Skipping book because the OPF file could not be found")
-				return 1, f"Skipping {bookFileName} because the OPF file could not be found."
-			manifest, spine = epubToCbz.getManifestAndSpine(opfFile)
-			logger.debug(f"Manifest is {manifest}")
-			logger.debug(f"Spine is {spine}")
-			imgList = epubToCbz.getImageFilenames(manifest, spine)
-		logger.debug(f"Image list is {imgList}")
+        if not epub:
+            imgList = getCbzImgs()
+        else:
+            docDir, opfFile = epubToCbz.findOpfEnterDoc(bookDir, tempPath)
+            if not opfFile:
+                logger.warning("Skipping book because the OPF file could not be found")
+                return 1, f"Skipping {bookFileName} because the OPF file could not be found."
+            manifest, spine = epubToCbz.getManifestAndSpine(opfFile)
+            logger.debug(f"Manifest is {manifest}")
+            logger.debug(f"Spine is {spine}")
+            imgList = epubToCbz.getImageFilenames(manifest, spine)
+        logger.debug(f"Image list is {imgList}")
 
-		# imgList = os.listdir()
-		# # check to see if the image files are in a subdirectory and bring them out if so
-		# while os.path.isdir(imgList[0]):
-		# for file in os.listdir(imgList[0]):
-		# shutil.move(os.path.join(imgList[0], file), file)
-		# os.rmdir(imgList[0])
-		# imgList = os.listdir()
+        # imgList = os.listdir()
+        # # check to see if the image files are in a subdirectory and bring them out if so
+        # while os.path.isdir(imgList[0]):
+        # for file in os.listdir(imgList[0]):
+        # shutil.move(os.path.join(imgList[0], file), file)
+        # os.rmdir(imgList[0])
+        # imgList = os.listdir()
 
-		# check whether imgList is long enough to account for all of pages
-		if (pages[-1][1] in ["l", "r", "d"] and len(imgList) < pages[-1][0]) or (
-				not (pages[-1][1] in ["l", "r", "d"]) and len(imgList) < pages[-1][0] + 1):
-			logger.warning("Book skipped because the last page to process is past the end of the book")
-			os.chdir(bookDir)
-			logger.debug(f"Changed directory into {os.getcwd()}")
-			shutil.rmtree(tempPath)
-			logger.debug(f"{tempPath} deleted")
-			return 1, f"{bookDir} skipped because the last page to process is past the end of the book."
+        # check whether imgList is long enough to account for all of pages
+        if (pages[-1][1] in ["l", "r", "d"] and len(imgList) < pages[-1][0]) or (
+                not (pages[-1][1] in ["l", "r", "d"]) and len(imgList) < pages[-1][0] + 1):
+            logger.warning("Book skipped because the last page to process is past the end of the book")
+            os.chdir(bookDir)
+            logger.debug(f"Changed directory into {os.getcwd()}")
+            shutil.rmtree(tempPath)
+            logger.debug(f"{tempPath} deleted")
+            return 1, f"{bookDir} skipped because the last page to process is past the end of the book."
 
-		if rightlines:
-			removeRightLines(imgList)
-			logger.info("Right lines removed from book")
+        if rightlines:
+            removeRightLines(imgList)
+        if leftlines:
+            removeLeftLines(imgList)
+        if toplines:
+            removeTopLines(imgList)
+        if bottomlines:
+            removeBottomLines(imgList)
 
-		imgList = processPages(imgList, pages, manga, overlap, compression)
-		logger.info("Pages processed")
-		logger.debug(f"Image list is {imgList}")
+        imgList = processPages(imgList, pages, manga, overlap, compression)
+        logger.info("Pages processed")
+        logger.debug(f"Image list is {imgList}")
 
-		# this if statement may not be necessary given that processPages returns imgList
-		if not epub:
-			imgList = os.listdir()
-			logger.debug(f"Image list is {imgList}")
-		os.chdir(bookDir)
-		logger.debug(f"Changed directory into {os.getcwd()}")
-		if not backedup and not epub:
-			os.rename(bookFileName, bookFileName + "_old")
-			logger.debug("Backup created")
-		elif epub:
-			logger.debug("Backup not created because the input is ePub and the output is CBZ")
-		else:
-			logger.debug("Backup not created because a backup already exists")
+        # this if statement may not be necessary given that processPages returns imgList
+        if not epub:
+            imgList = os.listdir()
+            logger.debug(f"Image list is {imgList}")
+        os.chdir(bookDir)
+        logger.debug(f"Changed directory into {os.getcwd()}")
+        if not backedup and not epub:
+            os.rename(bookFileName, bookFileName + "_old")
+            logger.debug("Backup created")
+        elif epub:
+            logger.debug("Backup not created because the input is ePub and the output is CBZ")
+        else:
+            logger.debug("Backup not created because a backup already exists")
 
-		# create new CBZ file with the combined pages
-		if epub:
-			epubToCbz.buildCbzFile(imgList, os.path.join(tempPath, docDir), bookFileName[:-4] + "cbz")
-		else:
-			with ZipFile(bookFileName, 'w') as newZip:
-				for file in imgList:
-					filePath = os.path.join(tempPath, file)
-					newZip.write(filePath, arcname = file)
-		logger.info("CBZ written to disk")
+        # create new CBZ file with the combined pages
+        if epub:
+            epubToCbz.buildCbzFile(imgList, os.path.join(tempPath, docDir), bookFileName[:-4] + "cbz")
+        else:
+            with ZipFile(bookFileName, 'w') as newZip:
+                for file in imgList:
+                    filePath = os.path.join(tempPath, file)
+                    newZip.write(filePath, arcname = file)
+        logger.info("CBZ written to disk")
 
-		shutil.rmtree(tempPath)
-		logger.debug(f"{tempPath} deleted")
+        shutil.rmtree(tempPath)
+        logger.debug(f"{tempPath} deleted")
 
-		logger.info("Processing complete")
-		return 0, getResultString(bookFileName, pages)
+        logger.info("Processing complete")
+        return 0, getResultString(bookFileName, pages)
 
-	except Exception as err:
-		if bookDir == "":
-			reason = f"Error occurred before book directory could be read in.\n{traceback.format_exc()}"
-		else:
-			reason = f"Error occurred while processing {bookDir}.\n{traceback.format_exc()}"
-		logger.error(reason)
-		return 2, reason
+    except Exception as err:
+        if bookDir == "":
+            reason = f"Error occurred before book directory could be read in.\n{traceback.format_exc()}"
+        else:
+            reason = f"Error occurred while processing {bookDir}.\n{traceback.format_exc()}"
+        logger.error(reason)
+        return 2, reason
 
 def processPages(imgList, pageList, manga, columns, compressionFuzz):
-	for page in pageList:
-		# delete page
-		if page[1] == "d":
-			os.remove(imgList[page[0] - 1])
-			logger.info(f"Deleted page {page[0]}")
-		
-		# rotate without stitching
-		elif page[1] in ["l", "r"]:
-			# read in the page I want
-			img = cv2.imread(imgList[page[0] - 1])
-			
-			if page[1] == "l":
-				# rotate left
-				img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
-			elif page[1] == "r":
-				# rotate right
-				img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-			
-			# save image
-			cv2.imwrite(imgList[page[0] - 1], img)
-			logger.info(f"Rotated page {page[0]} {'counterclockwise' if page[1] == 'l' else 'clockwise'}")
-		
-		# stitch and possibly rotate
-		else:
-			# read in the two pages I want to combine
-			# this is page - 1 and page because python lists are 0-indexed and the page numbers are 1-indexed
-			# print("{}, {}".format(page - 1, page))
-			img1 = cv2.imread(imgList[page[0] - 1])
-			img2 = cv2.imread(imgList[page[0]])
-			
-			# horizontally concatenate the two pages
-			if manga:
-				# combImg = cv2.hconcat([img2, img1])
-				combImg = stitchPages(img2, img1, columns, compressionFuzz)
-			else:
-				# combImg = cv2.hconcat([img1, img2])
-				combImg = stitchPages(img1, img2, columns, compressionFuzz)
-			
-			# rotate if needed
-			if page[1] == "m":
-				# rotate left
-				combImg = cv2.rotate(combImg, cv2.ROTATE_90_COUNTERCLOCKWISE)
-			elif page[1] == "s":
-				# rotate right
-				combImg = cv2.rotate(combImg, cv2.ROTATE_90_CLOCKWISE)
-			
-			# overwrite the first page with the combined pages
-			cv2.imwrite(imgList[page[0] - 1], combImg)
-			if page[1] in ['m', 's']:
-				logger.info(f"Stitched together pages {page[0]} and {page[0] + 1} and rotated them {'counterclockwise' if page[1] == 'm' else 'clockwise'}")
-			else:
-				logger.info(f"Stitched together pages {page[0]} and {page[0] + 1}")
-			
-			# remove the second page so I don't see it again separately from the combined pages
-			# unless I'm combining the front and back covers, in which case the front cover gets to stay as it is
-			if not page[0] == 0:
-				os.remove(imgList[page[0]])
-				logger.debug(f"Removed page {page[0] + 1}")
-	
-	for page in reversed(pageList):
-		if page[1] == "d":
-			del imgList[page[0] - 1]
-		elif page[1] in ["", "m", "s"] and not page[0] == 0:
-			del imgList[page[0]]
-	
-	return imgList
+    for page in pageList:
+        # delete page
+        if page[1] == "d":
+            os.remove(imgList[page[0] - 1])
+            logger.info(f"Deleted page {page[0]}")
+
+        # rotate without stitching
+        elif page[1] in ["l", "r"]:
+            # read in the page I want
+            img = cv2.imread(imgList[page[0] - 1])
+
+            if page[1] == "l":
+                # rotate left
+                img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            elif page[1] == "r":
+                # rotate right
+                img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+
+            # save image
+            cv2.imwrite(imgList[page[0] - 1], img)
+            logger.info(f"Rotated page {page[0]} {'counterclockwise' if page[1] == 'l' else 'clockwise'}")
+
+        # stitch and possibly rotate
+        else:
+            # read in the two pages I want to combine
+            # this is page - 1 and page because python lists are 0-indexed and the page numbers are 1-indexed
+            # print("{}, {}".format(page - 1, page))
+            img1 = cv2.imread(imgList[page[0] - 1])
+            img2 = cv2.imread(imgList[page[0]])
+
+            # horizontally concatenate the two pages
+            if manga:
+                # combImg = cv2.hconcat([img2, img1])
+                combImg = stitchPages(img2, img1, columns, compressionFuzz)
+            else:
+                # combImg = cv2.hconcat([img1, img2])
+                combImg = stitchPages(img1, img2, columns, compressionFuzz)
+
+            # rotate if needed
+            if page[1] == "m":
+                # rotate left
+                combImg = cv2.rotate(combImg, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            elif page[1] == "s":
+                # rotate right
+                combImg = cv2.rotate(combImg, cv2.ROTATE_90_CLOCKWISE)
+
+            # overwrite the first page with the combined pages
+            cv2.imwrite(imgList[page[0] - 1], combImg)
+            if page[1] in ['m', 's']:
+                logger.info(f"Stitched together pages {page[0]} and {page[0] + 1} and rotated them {'counterclockwise' if page[1] == 'm' else 'clockwise'}")
+            else:
+                logger.info(f"Stitched together pages {page[0]} and {page[0] + 1}")
+
+            # remove the second page so I don't see it again separately from the combined pages
+            # unless I'm combining the front and back covers, in which case the front cover gets to stay as it is
+            if not page[0] == 0:
+                os.remove(imgList[page[0]])
+                logger.debug(f"Removed page {page[0] + 1}")
+
+    for page in reversed(pageList):
+        if page[1] == "d":
+            del imgList[page[0] - 1]
+        elif page[1] in ["", "m", "s"] and not page[0] == 0:
+            del imgList[page[0]]
+
+    return imgList
 
 def stitchPages(leftImg, rightImg, columns, compressionFuzz):
-	if columns == 0:
-		logger.debug("Stitched pages together with no overlap checking")
-		return cv2.hconcat([leftImg, rightImg])
-	else:
-		negcolumns = (columns * -1) - 1
-		for i in range(-1, negcolumns, -1):
-			# account for fuzz factor for compression artifacts
-			# cast ndarrays as int16 because they're uint8 by default, which leads to wrong values when I should get negative ones
-			if np.abs(leftImg[:, i].astype(np.int16) - rightImg[:, 0].astype(np.int16)).max() < compressionFuzz:
-				logger.debug(f"Stitched pages together after finding overlap at column {i * -1}")
-				return cv2.hconcat([leftImg[:, :i], rightImg])
-		else:
-			logger.debug(f"Stitched pages together without finding overlap in {columns} columns")
-			return cv2.hconcat([leftImg, rightImg])
+    if columns == 0:
+        logger.debug("Stitched pages together with no overlap checking")
+        return cv2.hconcat([leftImg, rightImg])
+    else:
+        negcolumns = (columns * -1) - 1
+        for i in range(-1, negcolumns, -1):
+            # account for fuzz factor for compression artifacts
+            # cast ndarrays as int16 because they're uint8 by default, which leads to wrong values when I should get negative ones
+            if np.abs(leftImg[:, i].astype(np.int16) - rightImg[:, 0].astype(np.int16)).max() < compressionFuzz:
+                logger.debug(f"Stitched pages together after finding overlap at column {i * -1}")
+                return cv2.hconcat([leftImg[:, :i], rightImg])
+        else:
+            logger.debug(f"Stitched pages together without finding overlap in {columns} columns")
+            return cv2.hconcat([leftImg, rightImg])
 
 def getResultString(bookFileName, pagesList):
-	pagesString = ""
-	pagesDeleted = 0
-	modifiedPagesList = []
-	deletedPagesList = []
-	
-	# Make modifiedPagesList a list of all page numbers in the new file that have been modified and are still there
-	# Make deletedPagesList a list of all remaining pages right before pages that were deleted
-	for i in range(len(pagesList)):
-		if pagesList[i][1] == "d":
-			pagesDeleted += 1
-			pageBeforeDeletion = pagesList[i][0] - pagesDeleted
-			if pageBeforeDeletion not in deletedPagesList:
-				deletedPagesList.append(pageBeforeDeletion)
-		elif pagesList[i][1] in ["l","r"]:
-			modifiedPagesList.append(pagesList[i][0] - pagesDeleted)
-		else:
-			modifiedPagesList.append(pagesList[i][0] - pagesDeleted)
-			if pagesList[i][0] != 0:
-				pagesDeleted += 1
-	
-	pagesModified = len(modifiedPagesList)
-	logger.debug(f"modifiedPagesList: {modifiedPagesList}")
-	logger.debug(f"deletedPagesList: {deletedPagesList}")
-	logger.debug(f"pagesModified: {pagesModified}")
-	logger.debug(f"pagesDeleted: {pagesDeleted}")
-	
-	# No pages either deleted or modified
-	# This code block should never be reached
-	if pagesModified == 0 and pagesDeleted == 0:
-		result = f"{bookFileName} has not been modified. I don't know how this code block was reached."
-		logger.warning(f"Result string is '{result}'")
-		return result
+    pagesString = ""
+    pagesDeleted = 0
+    modifiedPagesList = []
+    deletedPagesList = []
 
-	# No pages modified, some deleted
-	elif pagesModified == 0 and pagesDeleted > 0:
-		deletedPagesString = oneTwoOrThreeList(deletedPagesList)
-		result = f"{bookFileName} has had deletions after {deletedPagesString}."
-		logger.info(f"Result string is '{result}'")
-		return result
+    # Make modifiedPagesList a list of all page numbers in the new file that have been modified and are still there
+    # Make deletedPagesList a list of all remaining pages right before pages that were deleted
+    for i in range(len(pagesList)):
+        if pagesList[i][1] == "d":
+            pagesDeleted += 1
+            pageBeforeDeletion = pagesList[i][0] - pagesDeleted
+            if pageBeforeDeletion not in deletedPagesList:
+                deletedPagesList.append(pageBeforeDeletion)
+        elif pagesList[i][1] in ["l","r"]:
+            modifiedPagesList.append(pagesList[i][0] - pagesDeleted)
+        else:
+            modifiedPagesList.append(pagesList[i][0] - pagesDeleted)
+            if pagesList[i][0] != 0:
+                pagesDeleted += 1
 
-	# No pages deleted, some modified
-	elif pagesModified > 0 and len(deletedPagesList) == 0:
-		# Check whether back cover has been modified
-		if modifiedPagesList[0] == 0:
-			# Only modified the back cover
-			if pagesModified == 1:
-				result = f"{bookFileName} has been modified on the back cover."
-				logger.info(f"Result string is '{result}'")
-				return result
-			# Modified the back cover and other pages
-			else:
-				del modifiedPagesList[0]
-				result = f"{bookFileName} has been modified on the back cover and {oneTwoOrThreeList(modifiedPagesList)}."
-				logger.info(f"Result string is '{result}'")
-				return result
-		# Did not modify the back cover
-		else:
-			result = f"{bookFileName} has been modified on {oneTwoOrThreeList(modifiedPagesList)}."
-			logger.info(f"Result string is '{result}'")
-			return result
+    pagesModified = len(modifiedPagesList)
+    logger.debug(f"modifiedPagesList: {modifiedPagesList}")
+    logger.debug(f"deletedPagesList: {deletedPagesList}")
+    logger.debug(f"pagesModified: {pagesModified}")
+    logger.debug(f"pagesDeleted: {pagesDeleted}")
 
-	# Pages modified and deleted
-	else:
-		deletedPagesString = oneTwoOrThreeList(deletedPagesList)
-		# Check whether back cover has been modified
-		if modifiedPagesList[0] == 0:
-			# Only modified the back cover
-			if pagesModified == 1:
-				result = f"{bookFileName} has been modified on the back cover and has had deletions after {deletedPagesString}."
-				logger.info(f"Result string is '{result}'")
-				return result
-			# Modified the back cover and other pages
-			else:
-				del modifiedPagesList[0]
-				modifiedPagesString = oneTwoOrThreeList(modifiedPagesList)
-				result = f"{bookFileName} has been modified on the back cover and {modifiedPagesString}, and has had deletions after {deletedPagesString}."
-				logger.info(f"Result string is '{result}'")
-				return result
-		# Did not modify the back cover
-		else:
-			modifiedPagesString = oneTwoOrThreeList(modifiedPagesList)
-			result = f"{bookFileName} has been modified on {modifiedPagesString}, and has had deletions after {deletedPagesString}."
-			logger.info(f"Result string is '{result}'")
-			return result
+    # No pages either deleted or modified
+    # This code block should never be reached
+    if pagesModified == 0 and pagesDeleted == 0:
+        result = f"{bookFileName} has not been modified. I don't know how this code block was reached."
+        logger.warning(f"Result string is '{result}'")
+        return result
+
+    # No pages modified, some deleted
+    elif pagesModified == 0 and pagesDeleted > 0:
+        deletedPagesString = oneTwoOrThreeList(deletedPagesList)
+        result = f"{bookFileName} has had deletions after {deletedPagesString}."
+        logger.info(f"Result string is '{result}'")
+        return result
+
+    # No pages deleted, some modified
+    elif pagesModified > 0 and len(deletedPagesList) == 0:
+        # Check whether back cover has been modified
+        if modifiedPagesList[0] == 0:
+            # Only modified the back cover
+            if pagesModified == 1:
+                result = f"{bookFileName} has been modified on the back cover."
+                logger.info(f"Result string is '{result}'")
+                return result
+            # Modified the back cover and other pages
+            else:
+                del modifiedPagesList[0]
+                result = f"{bookFileName} has been modified on the back cover and {oneTwoOrThreeList(modifiedPagesList)}."
+                logger.info(f"Result string is '{result}'")
+                return result
+        # Did not modify the back cover
+        else:
+            result = f"{bookFileName} has been modified on {oneTwoOrThreeList(modifiedPagesList)}."
+            logger.info(f"Result string is '{result}'")
+            return result
+
+    # Pages modified and deleted
+    else:
+        deletedPagesString = oneTwoOrThreeList(deletedPagesList)
+        # Check whether back cover has been modified
+        if modifiedPagesList[0] == 0:
+            # Only modified the back cover
+            if pagesModified == 1:
+                result = f"{bookFileName} has been modified on the back cover and has had deletions after {deletedPagesString}."
+                logger.info(f"Result string is '{result}'")
+                return result
+            # Modified the back cover and other pages
+            else:
+                del modifiedPagesList[0]
+                modifiedPagesString = oneTwoOrThreeList(modifiedPagesList)
+                result = f"{bookFileName} has been modified on the back cover and {modifiedPagesString}, and has had deletions after {deletedPagesString}."
+                logger.info(f"Result string is '{result}'")
+                return result
+        # Did not modify the back cover
+        else:
+            modifiedPagesString = oneTwoOrThreeList(modifiedPagesList)
+            result = f"{bookFileName} has been modified on {modifiedPagesString}, and has had deletions after {deletedPagesString}."
+            logger.info(f"Result string is '{result}'")
+            return result
 
 def oneTwoOrThreeList(numList):
-	if len(numList) == 0:
-		return "oneTwoOrThreeList got called on an empty list"
-	elif len(numList) == 1:
-		return f"page {numList[0]}"
-	elif len(numList) == 2:
-		return f"pages {numList[0]} and {numList[1]}"
-	else:
-		retString = "pages "
-		for i in range(len(numList)):
-			# Last page
-			if i == len(numList) - 1:
-				retString += str(numList[i])
-			# Second to last page
-			elif i == len(numList) - 2:
-				retString += f"{numList[i]}, and "
-			# At least 2 pages remaining
-			else:
-				retString += f"{numList[i]}, "
-		return retString
+    if len(numList) == 0:
+        return "oneTwoOrThreeList got called on an empty list"
+    elif len(numList) == 1:
+        return f"page {numList[0]}"
+    elif len(numList) == 2:
+        return f"pages {numList[0]} and {numList[1]}"
+    else:
+        retString = "pages "
+        for i in range(len(numList)):
+            # Last page
+            if i == len(numList) - 1:
+                retString += str(numList[i])
+            # Second to last page
+            elif i == len(numList) - 2:
+                retString += f"{numList[i]}, and "
+            # At least 2 pages remaining
+            else:
+                retString += f"{numList[i]}, "
+        return retString
 
 def bookDirIsValid(bookDir):
-	if bookDir == "":
-		return False, "No book directory on this line. Check your input."
-	elif not os.path.exists(bookDir):
-		return False, f"{bookDir} does not exist. Check your filepath."
-	
-	return True, ""
+    if bookDir == "":
+        return False, "No book directory on this line. Check your input."
+    elif not os.path.exists(bookDir):
+        return False, f"{bookDir} does not exist. Check your filepath."
+
+    return True, ""
 
 def convertPageList(pageString, bookDir):
-	# validate that input has pages to combine
-	if pageString == "":
-		return False, f"{bookDir} has no pages to combine. Check your input."
-	
-	# add pages to list of ints while validating that each page has a number and, if any modifiers, ones that match what's defined
-	pageStringList = pageString.split(",")
-	pageIntList = []
-	for page in pageStringList:
-		page = page.strip()
-		lastChar = page[-1]
-		if not lastChar.isdigit():
-			if not lastChar in ["r", "s", "l", "m", "d"]:
-				logger.warning(f"{page} is not a correct input")
-				return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
-			page = page[:-1]
-		else:
-			lastChar = ""
-		
-		if lastChar == "d":
-			# Check to see if it's a range
-			if "-" in page:
-				rangePages = page.split("-")
-				for rangePage in rangePages:
-					if not rangePage.isdigit():
-						logger.warning(f"{page} is not a correct input")
-						return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
-				for i in range(int(rangePages[0]), int(rangePages[1]) + 1):
-					pageIntList.append([i, "d"])
-			elif page.isdigit():
-				pageIntList.append([int(page), lastChar])
-			else:
-				logger.warning(f"{page} is not a correct input")
-				return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
-		elif not page.isdigit():
-			logger.warning(f"{page} is not a correct input")
-			return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
-		else:
-			pageIntList.append([int(page), lastChar])
-			logger.debug(f"Added {[int(page), lastChar]} to page list")
-	
-	pageIntList.sort()
-	logger.debug("Sorted page list")
-	
-	return pageIntList, ""
+    # validate that input has pages to combine
+    if pageString == "":
+        return False, f"{bookDir} has no pages to combine. Check your input."
+
+    # add pages to list of ints while validating that each page has a number and, if any modifiers, ones that match what's defined
+    pageStringList = pageString.split(",")
+    pageIntList = []
+    for page in pageStringList:
+        page = page.strip()
+        lastChar = page[-1]
+        if not lastChar.isdigit():
+            if not lastChar in ["r", "s", "l", "m", "d"]:
+                logger.warning(f"{page} is not a correct input")
+                return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
+            page = page[:-1]
+        else:
+            lastChar = ""
+
+        if lastChar == "d":
+            # Check to see if it's a range
+            if "-" in page:
+                rangePages = page.split("-")
+                for rangePage in rangePages:
+                    if not rangePage.isdigit():
+                        logger.warning(f"{page} is not a correct input")
+                        return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
+                for i in range(int(rangePages[0]), int(rangePages[1]) + 1):
+                    pageIntList.append([i, "d"])
+            elif page.isdigit():
+                pageIntList.append([int(page), lastChar])
+            else:
+                logger.warning(f"{page} is not a correct input")
+                return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
+        elif not page.isdigit():
+            logger.warning(f"{page} is not a correct input")
+            return False, f"Page list for {bookDir} contains at least one thing that's not a number and doesn't match any of the available page modifiers. Check your input."
+        else:
+            pageIntList.append([int(page), lastChar])
+            logger.debug(f"Added {[int(page), lastChar]} to page list")
+
+    pageIntList.sort()
+    logger.debug("Sorted page list")
+
+    return pageIntList, ""
 
 def findBookFile(backedup, epub, pdf):
-	bookFiles = os.listdir()
-	bookFileName = ""
-	backupFound = False
-	if epub:
-		ext = ".epub"
-		backupExt = ".epub_old"
-		upperExt = "EPUB"
-	elif pdf:
-		ext = ".pdf"
-		backupExt = ".pdf_old"
-		upperExt = "PDF"
-	else:
-		ext = ".cbz"
-		backupExt = ".cbz_old"
-		upperExt = "CBZ"
-	logger.debug(f"Looking for a {upperExt} file in {os.getcwd()}")
-	for file in bookFiles:
-		filename, extension = os.path.splitext(file)
-		if not backedup:
-			if extension == ext:
-				bookFileName = file
-			if extension == backupExt:
-				return False, f"{os.getcwd()} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the {upperExt}_OLD file or adding \"backedup\" as an option on the input.\n"
-		else:
-			if extension == ext:
-				bookFileName = file
-			if extension == backupExt:
-				backupFound = True
-	
-	if backedup and not backupFound:
-		return False, f"{os.getcwd()} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n"
+    bookFiles = os.listdir()
+    bookFileName = ""
+    backupFound = False
+    if epub:
+        ext = ".epub"
+        backupExt = ".epub_old"
+        upperExt = "EPUB"
+    elif pdf:
+        ext = ".pdf"
+        backupExt = ".pdf_old"
+        upperExt = "PDF"
+    else:
+        ext = ".cbz"
+        backupExt = ".cbz_old"
+        upperExt = "CBZ"
+    logger.debug(f"Looking for a {upperExt} file in {os.getcwd()}")
+    for file in bookFiles:
+        filename, extension = os.path.splitext(file)
+        if not backedup:
+            if extension == ext:
+                bookFileName = file
+            if extension == backupExt:
+                return False, f"{os.getcwd()} contains a backup from a previous run. As such, this book will be skipped. Try again after either deleting the {upperExt}_OLD file or adding \"backedup\" as an option on the input.\n"
+        else:
+            if extension == ext:
+                bookFileName = file
+            if extension == backupExt:
+                backupFound = True
 
-	if bookFileName == "":
-		return False, f"{os.getcwd()} has no {upperExt} files in it. Check your input."
-	
-	return True, bookFileName
+    if backedup and not backupFound:
+        return False, f"{os.getcwd()} had the backedup flag set, but no backup was found. Remove the backedup flag for this directory to process the book normally.\n"
+
+    if bookFileName == "":
+        return False, f"{os.getcwd()} has no {upperExt} files in it. Check your input."
+
+    return True, bookFileName
 
 def getBookFlags(flags):
-	manga = False
-	backedup = False
-	epub = False
-	pdf = False
-	rightlines = False
-	unknownFlag = False
-	# Parse book flags
-	for flag in flags:
-		flag = flag.strip()
-		if flag == "manga":
-			manga = True
-			logger.debug("Found manga flag")
-		elif flag == "backedup":
-			backedup = True
-			logger.debug("Found backedup flag")
-		elif flag == "epub":
-			epub = True
-			logger.debug("Found epub flag")
-		elif flag == "pdf":
-			pdf = True
-			logger.debug("Found pdf flag")
-		elif flag == "rightlines":
-			rightlines = True
-			logger.debug("Found rightlines flag")
-		else:
-			unknownFlag = True
-			logger.debug(f"Found unknown flag: {flag}")
-	return manga, backedup, epub, pdf, rightlines, unknownFlag
+    manga = False
+    backedup = False
+    epub = False
+    pdf = False
+    rightlines = False
+    leftlines = False
+    toplines = False
+    bottomlines = False
+    unknownFlag = False
+    # Parse book flags
+    for flag in flags:
+        flag = flag.strip()
+        if flag == "manga":
+            manga = True
+            logger.debug("Found manga flag")
+        elif flag == "backedup":
+            backedup = True
+            logger.debug("Found backedup flag")
+        elif flag == "epub":
+            epub = True
+            logger.debug("Found epub flag")
+        elif flag == "pdf":
+            pdf = True
+            logger.debug("Found pdf flag")
+        elif flag == "rightlines":
+            rightlines = True
+            logger.debug("Found rightlines flag")
+        elif flag == "leftlines":
+            leftlines = True
+            logger.debug("Found rightlines flag")
+        elif flag == "toplines":
+            toplines = True
+            logger.debug("Found rightlines flag")
+        elif flag == "bottomlines":
+            bottomlines = True
+            logger.debug("Found rightlines flag")
+        else:
+            unknownFlag = True
+            logger.debug(f"Found unknown flag: {flag}")
+    return manga, backedup, epub, pdf, rightlines, leftlines, toplines, bottomlines, unknownFlag
 
 def getCbzImgs():
-	imgList = os.listdir()
-	
-	# check to see if the image files are in a subdirectory and bring them out if so
-	while os.path.isdir(imgList[0]):
-		for file in os.listdir(imgList[0]):
-			shutil.move(os.path.join(imgList[0], file), file)
-		os.rmdir(imgList[0])
-		imgList = os.listdir()
-	
-	return imgList
+    imgList = os.listdir()
+
+    # check to see if the image files are in a subdirectory and bring them out if so
+    while os.path.isdir(imgList[0]):
+        for file in os.listdir(imgList[0]):
+            shutil.move(os.path.join(imgList[0], file), file)
+        os.rmdir(imgList[0])
+        imgList = os.listdir()
+
+    if imgList[0].upper() == ".DS_STORE":
+        del imgList[0]
+    return imgList
+
+def onlyRemoveLines(bookFileName, backedup, bookDir, right, left, top, bottom):
+    logger.info("Only requesting to remove side lines")
+    with ZipFile(bookFileName, 'r') as zipf:
+        zipf.extractall(path=tempPath)
+    os.chdir(tempPath)
+    logger.debug(f"Changed directory into {os.getcwd()}")
+    imgList = getCbzImgs()
+    logger.debug(f"Image list is {imgList}")
+    if right:
+        removeRightLines(imgList)
+    if left:
+        removeLeftLines(imgList)
+    if top:
+        removeTopLines(imgList)
+    if bottom:
+        removeBottomLines(imgList)
+    os.chdir(bookDir)
+    logger.debug(f"Changed directory into {os.getcwd()}")
+    if not backedup:
+        os.rename(bookFileName, bookFileName + "_old")
+        logger.debug("Backup made")
+    else:
+        logger.debug("backedup flag is set, so no backup made")
+    with ZipFile(bookFileName, 'w') as newZip:
+        for file in imgList:
+            filePath = os.path.join(tempPath, file)
+            newZip.write(filePath, arcname=file)
+    logger.debug(f"{bookFileName} has been written to disk")
+    shutil.rmtree(tempPath)
+    logger.debug(f"{tempPath} deleted")
+    logger.info("Lines removed from book")
+    logger.info("Processing complete")
+    return 0, f"{bookFileName} has had side lines removed."
 
 def removeRightLines(imgList):
-	for img in imgList:
-		page = cv2.imread(img)
-		page = page[:, :-1]
-		cv2.imwrite(img, page)
+    for img in imgList:
+        page = cv2.imread(img)
+        page = page[:, :-1]
+        cv2.imwrite(img, page)
+    logger.debug("Right lines removed")
+
+def removeLeftLines(imgList):
+    for img in imgList:
+        page = cv2.imread(img)
+        page = page[:, 1:]
+        cv2.imwrite(img, page)
+    logger.debug("Left lines removed")
+
+def removeTopLines(imgList):
+    for img in imgList:
+        page = cv2.imread(img)
+        page = page[1:, :]
+        cv2.imwrite(img, page)
+    logger.debug("Top lines removed")
+
+def removeBottomLines(imgList):
+    for img in imgList:
+        page = cv2.imread(img)
+        page = page[:-1, :]
+        cv2.imwrite(img, page)
+    logger.debug("Bottom lines removed")
 
 if __name__ == "__main__":
-	main()
-	
+    main()
+
 # some lines of code that might be useful for debugging at some point
 
 # can replace if statement starting with np.abs in stitchPages if I want no differences in that column:
-			# if not np.bitwise_xor(leftImg[:, i], rightImg[:, 0]).any():
+            # if not np.bitwise_xor(leftImg[:, i], rightImg[:, 0]).any():
 
 # print(os.getcwd())
 

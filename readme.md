@@ -53,13 +53,14 @@ D:\Calibre Library\Jaouen Salaun\Asphalt Blues (2236)||epub
 ```
 D:\Calibre Library\Chip Zdarsky\Newburn, Vol. 1 (2910)||rightlines
 ```
+- `leftlines`, `toplines`, `bottomlines`: Work the same way as `rightlines`, just for different sides of the pages.
 - `backedup`: This script leaves an unaltered backup of each original file it processes, stored with the file extension `.cbz_old` or `.pdf_old`, depending on what the input file type was (since it doesn't output ePub files, ePub inputs are simply left as is). If you try to process a file that has a backup of this kind without specifying this option, the script will skip it. If this option is specified, the script will process the already-processed file, using its page numbers. The backup file will remain unchanged, and a new backup will not be generated.
 
 If more than one option must be applied to the same book, simply separate each option with a `|`, like so:
 ```
 D:\Calibre Library\Dan Goldman\Chasing Echoes (2235)|2,4,6|epub|rightlines
 ```
-The order of the options does not matter.
+All options must come after the book directory and the page list, but other than that, the order of the options does not matter.
 
 Once you have as many books as you would like in `pagesToProcess.txt`, open a command prompt, navigate to the directory of the Git repo, and run the following command:
 ```
@@ -87,4 +88,4 @@ If you prefer using a GUI, you can, after setting up the Python or Anaconda envi
 ```
 python gui.py
 ```
-This will open a window that allows you to choose the book you want to process using a file dialog (note that, at least for the time being, it must still be the only file in its directory with its file extension), list the pages you want processed in the same format as you would in `pagesToProcess.txt`, control the overlap and compression fuzz arguments, and use the `manga`, `rightlines`, and `backedup` options. The window begins with one book; books may be added and removed using the `Add book` and `Remove` buttons. Clicking the `Process` button will process all books in the window.
+This will open a window that allows you to choose the book you want to process using a file dialog (note that, at least for the time being, it must still be the only file in its directory with its file extension), list the pages you want processed in the same format as you would in `pagesToProcess.txt`, control the overlap and compression fuzz arguments, and use the `manga` and `backedup` options, as well as the line-removal options. The window begins with one book; books may be added and removed using the `Add book` and `Remove` buttons. Clicking the `Process` button will process all books in the window.

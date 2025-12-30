@@ -222,6 +222,12 @@ class BookWindow:
             line += "|rightlines"
         if book.backedup.get() == "1":
             line += "|backedup"
+        if book.leftlines.get() == "1":
+            line += "|leftlines"
+        if book.toplines.get() == "1":
+            line += "|toplines"
+        if book.bottomlines.get() == "1":
+            line += "|bottomlines"
         if (not book.ent_comp.get().isdigit()) and (not book.ent_comp.get() == ""):
             print("Bad compression fuzz")
             book.lbl_results["text"] = "Compression fuzz should be a non-negative integer"
@@ -282,6 +288,17 @@ class BookFrame:
         self.cb_backedup = ttk.Checkbutton(master = self.frm, text = "Backed up", variable = self.backedup)
 
         # row 4
+        # leftlines checkbox
+        self.leftlines = tk.StringVar()
+        self.cb_leftlines = ttk.Checkbutton(master = self.frm, text = "Remove left lines", variable = self.leftlines)
+        # toplines checkbox
+        self.toplines = tk.StringVar()
+        self.cb_toplines = ttk.Checkbutton(master = self.frm, text = "Remove top lines", variable = self.toplines)
+        # bottomlines checkbox
+        self.bottomlines = tk.StringVar()
+        self.cb_bottomlines = ttk.Checkbutton(master = self.frm, text = "Remove bottom lines", variable = self.bottomlines)
+
+        # row 5
         # label to show the results of the processing
         self.lbl_results = ttk.Label(master = self.frm, text = "Click Process button to see results", wraplength = 300, justify = "left")
         # button to remove this book
@@ -297,13 +314,16 @@ class BookFrame:
         self.ent_overlap.grid(row = 2, column = 1, sticky = "w")
         self.lbl_comp.grid(row = 2, column = 1, sticky = "e")
         self.ent_comp.grid(row = 2, column = 2, sticky = "w")
-        self.cb_manga.grid(row = 3, column = 0)
-        self.cb_rightlines.grid(row = 3, column = 1)
-        self.cb_backedup.grid(row = 3, column = 2)
+        self.cb_manga.grid(row = 3, column = 0, sticky = "w")
+        self.cb_rightlines.grid(row = 3, column = 1, sticky = "w")
+        self.cb_backedup.grid(row = 3, column = 2, sticky = "w")
+        self.cb_leftlines.grid(row = 4, column = 0, sticky = "w")
+        self.cb_toplines.grid(row = 4, column = 1, sticky = "w")
+        self.cb_bottomlines.grid(row = 4, column = 2, sticky = "w")
         self.window.root.update()
         self.lbl_results.config(wraplength = self.cb_manga.winfo_width() + self.ent_pages.winfo_width() - 5)
-        self.lbl_results.grid(row = 4, column = 0, columnspan = 2)
-        self.btn_remove.grid(row = 4, column = 2, sticky = "es")
+        self.lbl_results.grid(row = 5, column = 0, columnspan = 2)
+        self.btn_remove.grid(row = 5, column = 2, sticky = "es")
 
     # choose file to process
     def browseFiles(self):
