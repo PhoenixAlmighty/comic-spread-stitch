@@ -101,8 +101,10 @@ def convertEpubToCbz(book):
 # working directory should be in the extracted ePub directory before this is called
 def getDocDir():
     dirList = os.listdir()
+    logger.debug(f"dirList is {dirList}")
     for file in dirList:
         if file not in ["META-INF", "mimetype"] and os.path.isdir(file):
+            logger.debug(f"\tdocDir is {file}")
             return file
     else:
         return False
@@ -110,11 +112,16 @@ def getDocDir():
 # working directory should be in the ePub's document directory before this is called
 def findOpfFile():
     dirList = os.listdir()
+    logger.debug(f"dirList is {dirList}")
     for file in dirList:
+        logger.debug(f"\tfile is {file}")
         fileExt = os.path.splitext(file)[1]
+        logger.debug(f"\t\tfileExt is {fileExt}")
         if fileExt.lower() == ".opf":
+            logger.debug(f"\t\topfFile is {file}")
             return file
     else:
+        logger.debug(f"\t opfFile not found")
         return False
 
 # currently returns spine as a list of idrefs
