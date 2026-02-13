@@ -89,3 +89,7 @@ If you prefer using a GUI, you can, after setting up the Python or Anaconda envi
 python gui.py
 ```
 This will open a window that allows you to choose the book you want to process using a file dialog (note that, at least for the time being, it must still be the only file in its directory with its file extension), list the pages you want processed in the same format as you would in `pagesToProcess.txt`, control the overlap and compression fuzz arguments, and use the `manga` and `backedup` options, as well as the line-removal options. The window begins with one book; books may be added and removed using the `Add book` and `Remove` buttons. Clicking the `Process` button will process all books in the window.
+
+## Known issues
+- CBZ/ePub: Processing fails if it attempts to stitch together two images with different heights
+- PDF: Some PDFs won't put pages together correctly; this likely has something to do with the original files having content outside the area the viewer shows
